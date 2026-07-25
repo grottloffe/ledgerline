@@ -1,0 +1,22 @@
+{
+  "name": "superproj-marketplace",
+  "owner": {
+    "name": "Magnus Engqvist",
+    "email": "magnus.engqvist@gmail.com"
+  },
+  "metadata": {
+    "description": "Personal Claude Code plugins."
+  },
+  "plugins": [
+    {
+      "name": "superproj",
+      "source": "./plugins/superproj",
+      "description": "Project-level memory and tracking layered on Superpowers: PRD intake, roadmap, decision log, follow-ups, lessons learned.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Magnus Engqvist"
+      },
+      "keywords": ["project-management", "prd", "roadmap", "superpowers"]
+    }
+  ]
+}
