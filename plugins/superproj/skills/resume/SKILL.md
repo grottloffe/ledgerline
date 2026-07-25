@@ -47,8 +47,8 @@ Drift patterns and what each means:
 Resolve with evidence, not assumption. Git wins on what *happened*; the ledger
 wins on what was *intended*. When they conflict irreducibly, ask.
 
-Apply the corrections to the ledger, and add a journal entry noting the
-reconciliation if you changed anything of substance.
+Apply the corrections to the ledger, run `sp.js state`, and add a journal entry
+noting the reconciliation if you changed anything of substance.
 
 ## 4. Restate and propose
 

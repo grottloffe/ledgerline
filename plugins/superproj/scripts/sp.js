@@ -7,6 +7,7 @@
  *
  * Subcommands:
  *   init   [--name "X"] [--force]      scaffold the ledger
+ *   state  [--stdout]                  regenerate docs/project/STATE.md (write-if-changed)
  *   status [--brief | --json]          roll up current state
  *   check                              validate the ledger (exit 1 on errors)
  *   next-id <F|D|U|L|R|M>              allocate the next free ID
@@ -97,6 +98,38 @@ function idNum(id) {
   return m ? parseInt(m[1], 10) : 0;
 }
 
+/**
+ * Parse the rows of the first markdown table under a heading, skipping the
+ * header and separator rows and any row that is entirely empty or placeholder.
+ */
+function sectionRows(text, headingPattern) {
+  if (!text) return [];
+  const lines = text.split(/\r?\n/);
+  const out = [];
+  let inSection = false;
+  let seenTable = false;
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (/^#{1,6}\s/.test(line)) {
+      if (inSection && seenTable) break;
+      inSection = headingPattern.test(line);
+      continue;
+    }
+    if (!inSection) continue;
+    if (!line.startsWith('|')) { if (seenTable) break; continue; }
+    seenTable = true;
+    let cells = line.split('|');
+    cells.shift();
+    if (cells.length && cells[cells.length - 1].trim() === '') cells.pop();
+    cells = cells.map((s) => s.trim());
+    if (cells.every((c) => /^:?-{1,}:?$/.test(c) || c === '')) continue;   // separator or blank
+    if (out.length === 0 && cells.some((c) => /^(Question|ID|Requirement|Who|Criterion)$/i.test(c))) continue; // header
+    if (cells.every((c) => !c || /^\(.*\)$/.test(c))) continue;            // placeholder
+    out.push(cells);
+  }
+  return out;
+}
+
 function field(text, label) {
   if (!text) return null;
   const re = new RegExp('^\\s*[-*]?\\s*\\*\\*' + label + ':?\\*\\*\\s*(.*)$', 'im');
@@ -183,6 +216,32 @@ function load(loc) {
     };
     model.features.push(f);
   }
+  // Enrich each feature from its dossier: one parse, shared by check() and state().
+  for (const f of model.features) {
+    f.dossierExists = false;
+    f.dossierStatus = null;
+    f.opened = null;
+    f.criteria = [];
+    f.criteriaDone = 0;
+    f.criteriaOpen = [];
+    if (!f.dossier) continue;
+    const doc = read(path.join(loc.root, f.dossier));
+    if (doc === null) continue;
+    f.dossierExists = true;
+    f.dossierStatus = (field(doc, 'Status') || '').toLowerCase() || null;
+    const opened = field(doc, 'Opened');
+    if (opened && /^\d{4}-\d{2}-\d{2}$/.test(opened)) f.opened = opened;
+    for (const raw of doc.split(/\r?\n/)) {
+      const m = raw.match(/^\s*[-*]\s*\[( |x|X)\]\s*(.*)$/);
+      if (!m) continue;
+      const done = m[1] !== ' ';
+      const text = m[2].trim();
+      f.criteria.push({ done, text });
+      if (done) f.criteriaDone++;
+      else if (text) f.criteriaOpen.push(text);
+    }
+  }
+
   // Attach features to milestones by scanning the roadmap in order.
   {
     let ms = null;
@@ -210,6 +269,11 @@ function load(loc) {
   }
   model.decisions = idHeadings(files['DECISIONS.md'], 'D');
   model.lessons = idHeadings(files['LESSONS.md'], 'L');
+
+  // PRD open questions: | Question | Blocks | How we resolve it |
+  model.openQuestions = sectionRows(files['PRD.md'], /open questions/i)
+    .map((c) => ({ question: c[0] || '', blocks: c[1] || '', resolve: c[2] || '' }))
+    .filter((q) => q.question);
 
   const journal = files['JOURNAL.md'] || '';
   for (const raw of journal.split(/\r?\n/)) {
@@ -241,7 +305,8 @@ function readyFeatures(m) {
 
 // ---------------------------------------------------------------- check
 
-function check(m) {
+function check(m, opts) {
+  const forState = !!(opts && opts.forState);
   const findings = [];
   const E = (msg, fix) => findings.push({ level: 'error', msg, fix });
   const W = (msg, fix) => findings.push({ level: 'warn', msg, fix });
@@ -283,22 +348,18 @@ function check(m) {
     if (f.plan && !exists(path.join(m.root, f.plan))) W(`${f.id} references plan ${f.plan}, which does not exist.`, 'Fix the path or clear the cell.');
 
     const needsDossier = f.status !== 'planned' && f.status !== 'dropped';
-    const dossierPath = f.dossier ? path.join(m.root, f.dossier) : null;
-    if (needsDossier && (!dossierPath || !exists(dossierPath))) {
+    if (needsDossier && !f.dossierExists) {
       E(`${f.id} is ${f.status} but has no dossier file.`, 'Run /superproj:start-feature, or create the dossier from templates/FEATURE.md.');
     }
-    if (dossierPath && exists(dossierPath)) {
-      const doc = read(dossierPath) || '';
-      const dStatus = (field(doc, 'Status') || '').toLowerCase();
-      if (dStatus && dStatus !== f.status) {
-        E(`${f.id}: roadmap says "${f.status}", dossier says "${dStatus}".`, 'Reconcile with /superproj:resume; the roadmap wins unless git says otherwise.');
+    if (f.dossierExists) {
+      if (f.dossierStatus && f.dossierStatus !== f.status) {
+        E(`${f.id}: roadmap says "${f.status}", dossier says "${f.dossierStatus}".`, 'Reconcile with /superproj:resume; the roadmap wins unless git says otherwise.');
       }
-      const criteria = doc.match(/^\s*[-*]\s*\[( |x|X)\]/gm) || [];
-      if (!criteria.length && f.status !== 'planned') {
+      if (!f.criteria.length && f.status !== 'planned') {
         W(`${f.id} has no acceptance-criteria checkboxes in its dossier.`, 'Add criteria before planning; unverifiable features cannot be closed.');
       }
-      if (f.status === 'done' && criteria.some((c) => /\[ \]/.test(c))) {
-        E(`${f.id} is marked done but has unchecked acceptance criteria.`, 'Verify and tick them, or reopen the feature.');
+      if (f.status === 'done' && f.criteriaOpen.length) {
+        E(`${f.id} is marked done but has ${f.criteriaOpen.length} unchecked acceptance criteria.`, 'Verify and tick them, or reopen the feature.');
       }
     }
   }
@@ -339,7 +400,188 @@ function check(m) {
 
   if (!m.features.length) W('The roadmap has no features.', 'Run /superproj:kickoff or /superproj:roadmap to populate it.');
 
+  // STATE.md is generated. If what is on disk differs from what would be
+  // generated now, it is either stale or was hand-edited — both mean someone is
+  // reading something untrue, and a hand edit is about to be destroyed.
+  // Skipped when called from the generator itself, to avoid recursing.
+  if (!forState) {
+    const onDisk = read(path.join(m.ledger, 'STATE.md'));
+    if (onDisk === null) {
+      W('STATE.md has not been generated yet.', 'Run `sp.js state`.');
+    } else if (comparableState(onDisk) !== comparableState(generateState(m))) {
+      W('STATE.md is stale or was hand-edited (it is a generated file).',
+        'Run `sp.js state` to regenerate. If you meant to change a fact, change the file that owns it.');
+    }
+  }
+
   return findings;
+}
+
+// ---------------------------------------------------------------- STATE.md
+
+/** Everything except the timestamp line, so a regeneration with no state change compares equal. */
+function comparableState(text) {
+  return (text || '').split(/\r?\n/).filter((l) => !l.startsWith('Generated ')).join('\n').trim();
+}
+
+function generateState(m) {
+  const findings = check(m, { forState: true });
+  const errs = findings.filter((f) => f.level === 'error');
+  const warns = findings.filter((f) => f.level === 'warn');
+  const L = [];
+  const cap = (list, n, where) => {
+    const shown = list.slice(0, n);
+    if (list.length > n) shown.push({ __more: `(+${list.length - n} more in ${where})` });
+    return shown;
+  };
+  const line = (s) => L.push(s);
+
+  line('<!-- GENERATED FILE — DO NOT EDIT.');
+  line('     Every fact here is owned by another file in docs/project/.');
+  line('     Regenerate: node <plugin>/scripts/sp.js state');
+  line('     Hand edits are destroyed on the next regeneration, and `sp.js check` reports them. -->');
+  line('');
+  line(`# ${m.name} — where we are`);
+  line('');
+  line(`Generated ${isoMinutes()}.`);
+  line('');
+
+  const ms = activeMilestone(m);
+  const done = m.features.filter((f) => f.status === 'done').length;
+  const live = m.features.filter((f) => f.status !== 'dropped').length;
+  if (ms) {
+    const idx = m.milestones.findIndex((x) => x.id === ms.id) + 1;
+    const msDone = ms.features.filter((f) => f.status === 'done').length;
+    line(`## ${ms.id} ${ms.title}`);
+    line('');
+    const scope = ms.features.length === live
+      ? `${msDone}/${ms.features.length} features done`
+      : `${msDone}/${ms.features.length} features done here · ${done}/${live} across the project`;
+    line(`Milestone ${idx} of ${m.milestones.length} · ${scope}.`);
+    const goal = (m.files['ROADMAP.md'] || '').split(new RegExp('^##\\s+' + ms.id + '\\b', 'm'))[1] || '';
+    const g = goal.match(/^[-*]?\s*\*\*Goal:?\*\*\s*(.*)$/m);
+    const x = goal.match(/^[-*]?\s*\*\*Exit criteria:?\*\*\s*(.*)$/m);
+    if (g && g[1].trim()) { line(''); line(`Goal: ${g[1].trim()}`); }
+    if (x && x[1].trim()) line(`Exit criteria: ${x[1].trim()}`);
+  } else {
+    line('## No active milestone');
+    line('');
+    line(`${done}/${live} features done.`);
+  }
+  line('');
+
+  const flight = m.features.filter((f) => f.status === 'in-progress' || f.status === 'in-review');
+  line('## In flight');
+  line('');
+  if (!flight.length) {
+    line('Nothing. Pick up the next ready feature below.');
+  } else {
+    for (const f of flight) {
+      const age = f.opened ? daysBetween(f.opened, new Date()) : null;
+      const since = f.opened ? `, opened ${f.opened}${age !== null ? ` (${age} day${age === 1 ? '' : 's'} ago)` : ''}` : '';
+      line(`**${f.id} ${f.title}** — ${f.status}${since}`);
+      if (f.plan) line(`Plan: ${f.plan}`);
+      if (f.criteria.length) {
+        line(`Criteria: ${f.criteriaDone}/${f.criteria.length} verified.`);
+        for (const c of cap(f.criteriaOpen, 3, 'the dossier')) {
+          line(c.__more ? `  ${c.__more}` : `  - [ ] ${c}`);
+        }
+      } else {
+        line('Criteria: none written yet — that needs fixing before this can be closed.');
+      }
+      line('');
+    }
+    L.pop();
+  }
+  line('');
+
+  // Things only a person can settle.
+  const needs = [];
+  for (const q of m.openQuestions) needs.push(`Open question: ${q.question}${q.blocks ? ` — blocks ${q.blocks}` : ''}`);
+  for (const u of m.followups) {
+    if (u.status === 'open' && (!u.trigger || u.trigger === '—' || /^tbd$/i.test(u.trigger))) {
+      needs.push(`${u.id} "${u.title}" is open with no trigger — give it one or drop it`);
+    }
+  }
+  for (const e of errs.slice(0, 3)) needs.push(`Ledger error: ${e.msg}`);
+  if (needs.length) {
+    line('## Needs a person');
+    line('');
+    for (const n of cap(needs, 5, 'PRD.md / FOLLOWUPS.md / `sp.js check`')) line(n.__more ? n.__more : `- ${n}`);
+    line('');
+  }
+
+  const blocked = m.features.filter((f) => f.status === 'blocked');
+  if (blocked.length) {
+    line('## Blocked');
+    line('');
+    for (const f of blocked) {
+      const on = f.deps.filter((d) => {
+        const dep = m.features.find((x) => x.id === d);
+        return dep && dep.status !== 'done';
+      });
+      line(`- ${f.id} ${f.title}${on.length ? ` — waiting on ${on.join(', ')}` : ''}`);
+    }
+    line('');
+  }
+
+  const ready = readyFeatures(m);
+  line('## Ready to start');
+  line('');
+  if (!ready.length) {
+    line(!m.features.length
+      ? 'The roadmap has no features yet — run /superproj:kickoff.'
+      : live === done
+        ? 'Everything on the roadmap is done.'
+        : 'Nothing is unblocked — see Blocked above.');
+  } else {
+    for (const f of cap(ready, 4, 'ROADMAP.md')) {
+      line(f.__more ? f.__more : `- ${f.id} ${f.title}${f.reqs.length ? ` (${f.reqs.join(', ')})` : ''}`);
+    }
+  }
+  line('');
+
+  const openU = m.followups.filter((u) => u.status === 'open');
+  if (openU.length) {
+    line(`## Debt — ${openU.length} open follow-up${openU.length === 1 ? '' : 's'}`);
+    line('');
+    for (const u of cap(openU, 4, 'FOLLOWUPS.md')) {
+      line(u.__more ? u.__more : `- ${u.id} ${u.title} — ${u.trigger || 'no trigger'}${u.size ? ` (${u.size})` : ''}`);
+    }
+    line('');
+  }
+
+  const recent = m.journal.slice(-3).reverse();
+  if (recent.length) {
+    line('## Recently');
+    line('');
+    for (const j of recent) line(`- ${j.date} — ${j.title}`);
+    line('');
+  }
+
+  line('## Ledger');
+  line('');
+  line(`${m.features.length} features (${done} done) · ${m.requirements.length} requirements · ` +
+       `${m.decisions.length} decisions · ${m.lessons.length} lessons · ${openU.length} open follow-ups`);
+  const newestD = m.decisions.slice(-2).reverse().map((d) => `${d.id} ${d.title}`).join(' · ');
+  if (newestD) line(`Latest decisions: ${newestD}`);
+  line(errs.length
+    ? `Check: ${errs.length} error${errs.length === 1 ? '' : 's'}, ${warns.length} warning${warns.length === 1 ? '' : 's'} — run \`sp.js check\`.`
+    : `Check: clean${warns.length ? `, ${warns.length} warning${warns.length === 1 ? '' : 's'}` : ''}.`);
+
+  return L.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
+}
+
+function writeState(m) {
+  if (!m.hasLedger) return { written: false, reason: 'no ledger' };
+  const target = path.join(m.ledger, 'STATE.md');
+  const next = generateState(m);
+  const current = read(target);
+  if (current !== null && comparableState(current) === comparableState(next)) {
+    return { written: false, reason: 'no change', lines: next.split('\n').length };
+  }
+  fs.writeFileSync(target, next);
+  return { written: true, reason: current === null ? 'created' : 'updated', lines: next.split('\n').length };
 }
 
 // ---------------------------------------------------------------- reporting
@@ -517,6 +759,9 @@ function init(loc, opts) {
     'docs/project/LESSONS.md merge=union',
     'docs/project/JOURNAL.md merge=union',
     'docs/project/FOLLOWUPS.md merge=union',
+    // STATE.md is generated, so a merge of it is meaningless: keep either side
+    // and let the next regeneration produce the truth.
+    'docs/project/STATE.md merge=ours',
   ];
   const existing = read(gaPath) || '';
   const missing = gaLines.filter((l) => !existing.includes(l.split(' ')[0]));
@@ -559,6 +804,8 @@ function main(argv) {
 
     case 'init': {
       const r = init(loc, { name: valueOf('--name'), force: flags.has('--force') });
+      // Generate STATE.md immediately, so the ledger is never missing it.
+      try { writeState(load(locate(loc.root))); } catch { /* not fatal */ }
       process.stdout.write(
         `Ledger at ${r.ledger}\nproject: ${r.name}\nwritten: ${r.written.join(', ') || '(none)'}\n` +
         `left alone: ${r.skipped.join(', ') || '(none)'}\n.gitattributes: ${r.gitattributes}\n`);
@@ -571,6 +818,15 @@ function main(argv) {
       const id = prefix === 'M' ? nextMilestone(m) : nextId(m, prefix);
       if (!id) { process.stderr.write('usage: sp.js next-id <F|D|U|L|R|M>\n'); return 2; }
       process.stdout.write(id + '\n');
+      return 0;
+    }
+
+    case 'state': {
+      const m = load(loc);
+      if (!m.hasLedger) { process.stderr.write('No ledger here; nothing to generate.\n'); return 1; }
+      if (flags.has('--stdout')) { process.stdout.write(generateState(m)); return 0; }
+      const r = writeState(m);
+      process.stdout.write(`STATE.md ${r.written ? r.reason : 'unchanged'} (${r.lines} lines) at ${path.join(m.ledger, 'STATE.md')}\n`);
       return 0;
     }
 
@@ -599,8 +855,9 @@ function main(argv) {
     default:
       process.stderr.write(
         'sp.js — SuperProj ledger engine\n\n' +
-        'usage: node sp.js <init|status|check|next-id|today|paths> [options]\n' +
+        'usage: node sp.js <init|state|status|check|next-id|today|paths> [options]\n' +
         '  init   [--name "X"] [--force]\n' +
+        '  state  [--stdout]\n' +
         '  status [--brief|--json]\n' +
         '  check\n' +
         '  next-id <F|D|U|L|R|M>\n' +
@@ -620,4 +877,7 @@ if (require.main === module) {
   }
 }
 
-module.exports = { locate, load, check, brief, statusMd, toJson, nextId, nextMilestone, init, isoDate, isoMinutes, STATUSES };
+module.exports = {
+  locate, load, check, brief, statusMd, toJson, nextId, nextMilestone, init,
+  generateState, writeState, comparableState, isoDate, isoMinutes, STATUSES,
+};

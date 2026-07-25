@@ -56,8 +56,14 @@ Use `superpowers:finishing-a-development-branch` for the merge/PR decision, or i
 it is unavailable, ask whether this merges or becomes a PR and do that. The
 ledger updates belong in the same branch as the work, so they land together.
 
-Run `node "${CLAUDE_PLUGIN_ROOT}/scripts/sp.js" check` and fix anything it
-reports before you call this finished.
+Regenerate and validate before you call this finished:
+
+```
+node "${CLAUDE_PLUGIN_ROOT}/scripts/sp.js" state
+node "${CLAUDE_PLUGIN_ROOT}/scripts/sp.js" check
+```
+
+Fix anything `check` reports.
 
 ## 5. Report
 

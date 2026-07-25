@@ -26,7 +26,8 @@ them; it never replaces them.
 
 ```
 docs/project/
-├── PRD.md            what and why; requirements with stable IDs (R-001)
+├── STATE.md           GENERATED — where we are right now. Never hand-edit.
+├── PRD.md             what and why; requirements with stable IDs (R-001)
 ├── ARCHITECTURE.md    living map: stack, module map, invariants, undecided
 ├── ROADMAP.md         milestones (M1) → features (F-001) with status and deps
 ├── DECISIONS.md       append-only ADRs (D-001)
@@ -37,6 +38,11 @@ docs/project/
     └── F-001-slug.md  dossier: goal, acceptance criteria, status log, review, verification
 ```
 
+`STATE.md` is derived from the others and exists for humans reading the repo and
+for git history. It is never a source of truth: to change a fact in it, change
+the file that owns the fact and regenerate. Never edit it, and never read it in
+preference to running `sp.js status`, which cannot be stale.
+
 ## Tooling
 
 Never hand-count IDs or dates. Use the engine:
@@ -44,13 +50,16 @@ Never hand-count IDs or dates. Use the engine:
 ```
 node "${CLAUDE_PLUGIN_ROOT}/scripts/sp.js" status          # full rollup (markdown)
 node "${CLAUDE_PLUGIN_ROOT}/scripts/sp.js" status --json    # same, machine-readable, includes nextIds
+node "${CLAUDE_PLUGIN_ROOT}/scripts/sp.js" state            # regenerate STATE.md (writes only if changed)
 node "${CLAUDE_PLUGIN_ROOT}/scripts/sp.js" check            # validate; exit 1 on errors
 node "${CLAUDE_PLUGIN_ROOT}/scripts/sp.js" next-id D        # next free ID for F|D|U|L|R|M
 node "${CLAUDE_PLUGIN_ROOT}/scripts/sp.js" today            # date stamp, do not guess it
 node "${CLAUDE_PLUGIN_ROOT}/scripts/sp.js" init             # scaffold a missing ledger (idempotent)
 ```
 
-Run `check` after any batch of ledger edits and fix what it reports before moving on.
+After any batch of ledger edits, run `state` then `check`, and fix what `check`
+reports before moving on. Forgetting `state` is not silent — `check` warns when
+STATE.md no longer matches the ledger.
 
 ## Vocabulary
 

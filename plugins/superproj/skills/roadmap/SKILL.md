@@ -42,6 +42,7 @@ being the one who refuses is not.
 
 ```
 node "${CLAUDE_PLUGIN_ROOT}/scripts/sp.js" next-id F      # or R, or M
+node "${CLAUDE_PLUGIN_ROOT}/scripts/sp.js" state          # after the edits
 node "${CLAUDE_PLUGIN_ROOT}/scripts/sp.js" check
 ```
 

@@ -38,6 +38,26 @@ duplicate Superpowers' cycle was refused.
 The cost of markdown is fuzzy parsing. That is paid for with strict column
 orders, ID conventions, and `sp.js check` — a validator, rather than a schema.
 
+**One generated file, treated as hostile.** `STATE.md` exists for two audiences
+the rest of the ledger does not serve: a human opening the repo without starting
+Claude, and `git log -p`, which turns it into a history of where the project
+stood. It is explicitly *not* for the agent — the agent gets the SessionStart
+brief for free and can regenerate on demand, so for it a file on disk can only
+ever be staler than a live query.
+
+That framing matters, because derived data committed to git has a predictable
+failure mode: it becomes the most prominent and most trusted file in the ledger,
+and it is the one guaranteed to be wrong. "Never hand-edit" is also the rule most
+likely to be broken, since it is the most convenient file to edit — and a hand
+edit silently destroyed on the next regeneration is worse than no file at all.
+
+So the safety is structural rather than a request for discipline. The hook
+regenerates it, so freshness does not depend on anyone remembering. It is written
+only when the content actually changed, so opening a session does not dirty the
+tree — without that, the churn objection alone would kill the idea. And `check`
+regenerates and compares, so stale-or-hand-edited is a reported warning instead
+of a silent lie. The rule is enforced by the validator, not by the documentation.
+
 **A script for everything mechanical.** ID allocation, date stamps, rollups and
 validation go through `sp.js`. Language models are unreliable at exactly these
 things: counting to the next free ID across seven files, knowing today's date,
@@ -110,6 +130,9 @@ the same ledger files. Two mitigations:
 produces nonsense rows. Status edits are expected to conflict occasionally and
 be resolved by hand — the roadmap is small and the conflicts are legible.
 
+`STATE.md` uses `merge=ours`, since merging two versions of a generated file is
+meaningless: keep either side and let the next regeneration produce the truth.
+
 ## What was deliberately left out
 
 - **A fully autonomous driver** that walks the roadmap without stopping. The gates in `start-feature` and `finish-feature` are where a wrong direction gets caught for the price of a conversation instead of a milestone. Easy to add later on top of these skills; hard to un-add safely.
@@ -120,6 +143,7 @@ be resolved by hand — the roadmap is small and the conflicts are legible.
 ## Extending it
 
 - **New ledger file:** add the template, add it to `LEDGER_FILES` in `sp.js`, give it a parser and at least one rule in `check()`. A ledger file with no validation rule will rot.
+- **New STATE.md section:** add it in `generateState()`, and cap it with the `cap()` helper so truncation is visible as "+N more" rather than silent. Keep the whole file around 60 lines: its value is being skimmable in one screen, and every section added competes with the ones already earning their place.
 - **New status value:** `STATUSES` in `sp.js`, plus the vocabulary lists in `using-superproj` and the templates. Three places, all greppable.
 - **New skill:** keep the body short — skill content stays in context for the whole turn once loaded. State what to do, not why. Push reference material into a sibling file the skill points at.
 - **Project-type variants:** copy `templates/`, add a `--template` flag to `init`.

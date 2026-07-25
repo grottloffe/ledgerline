@@ -55,6 +55,14 @@ function main() {
   if (!loc.hasLedger) return;
 
   const model = sp.load(loc);
+
+  // Keep the generated STATE.md honest without relying on anyone remembering.
+  // Writes only when the content actually changed, so merely opening a session
+  // does not dirty the working tree. A read-only checkout is not an error here.
+  try {
+    sp.writeState(model);
+  } catch { /* the brief still works; never fail a session over a generated file */ }
+
   let text = sp.brief(model);
   if (!text) return;
   if (text.length > 9000) text = text.slice(0, 9000) + '\n…(truncated)';

@@ -65,6 +65,7 @@ already knows where the project stands before you type anything.
 docs/
 ├── plans/                  ← Superpowers' plans, untouched
 └── project/                ← the SuperProj ledger
+    ├── STATE.md            GENERATED — ~60 lines, where we are right now
     ├── PRD.md              what and why; requirements with stable IDs (R-001)
     ├── ARCHITECTURE.md     living map: stack, module map, invariants, undecided
     ├── ROADMAP.md          milestones (M1) → features (F-001), status + deps
@@ -79,6 +80,23 @@ docs/
 Plain markdown, committed with the code, diffable in review. `init` also adds
 `merge=union` to `.gitattributes` for the append-only files so parallel
 worktrees do not conflict on every entry.
+
+### STATE.md
+
+One screen you can open without starting Claude: current milestone and its exit
+criteria, what is in flight with its unverified acceptance criteria, **what needs
+a decision from you**, what is blocked, what is ready, the debt register, and the
+last three journal entries.
+
+It is derived, never authoritative. Three things keep that safe:
+
+- The `SessionStart` hook regenerates it, so it does not depend on anyone remembering.
+- It is written **only when the content actually changed**, so opening a session does not dirty your working tree.
+- `check` regenerates and compares, so a stale *or* hand-edited STATE.md is reported rather than silently trusted or silently destroyed.
+
+Committed, so `git log -p docs/project/STATE.md` is a readable history of where
+the project stood over time. If you would rather not have it in git, add it to
+`.gitignore` — nothing depends on it being tracked.
 
 ## Skills
 
@@ -110,6 +128,7 @@ hand-counts IDs or guesses dates:
 
 ```
 node <plugin>/scripts/sp.js status [--brief|--json]
+node <plugin>/scripts/sp.js state          # regenerate STATE.md, write-if-changed
 node <plugin>/scripts/sp.js check          # validate; exit 1 on errors
 node <plugin>/scripts/sp.js next-id D      # F|D|U|L|R|M
 node <plugin>/scripts/sp.js init           # idempotent scaffold
@@ -119,8 +138,8 @@ node <plugin>/scripts/sp.js today
 `check` catches duplicate IDs, more than one feature in flight, features marked
 done with unchecked acceptance criteria, roadmap/dossier status conflicts,
 dependencies on features that do not exist, missing plan files, orphaned plans,
-follow-ups with no trigger, dangling supersede references, and a stale journal
-while work is in flight.
+follow-ups with no trigger, dangling supersede references, a stale journal while
+work is in flight, and a STATE.md that no longer matches the ledger.
 
 ## Design notes
 

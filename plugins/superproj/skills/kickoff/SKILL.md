@@ -92,7 +92,7 @@ roadmap to rot.
 - Add `.gitattributes` union-merge lines if `init` did not (it prints what it wrote).
 - Commit the ledger as its own commit: `docs: initialise project ledger`.
 - Append a `JOURNAL.md` entry: what was decided, what is open, what is next.
-- Run `node "${CLAUDE_PLUGIN_ROOT}/scripts/sp.js" check` and fix everything it reports.
+- Run `sp.js state` to generate `STATE.md`, then `sp.js check`, and fix everything it reports.
 
 ## 5. Hand off
 

@@ -74,7 +74,7 @@ change is how a project ends up somewhere nobody chose.
 - Mark the milestone `done` in `ROADMAP.md`, set the next one `active`.
 - Journal entry summarising the review and the re-plan.
 - Tag the commit (`git tag <M0>-complete`) so the next review has a boundary.
-- Run `check` and clear it.
+- Run `sp.js state`, then `check`, and clear it.
 
 Report to the user: what the milestone actually delivered versus what it
 promised, the two or three findings that matter, and what changed about the plan

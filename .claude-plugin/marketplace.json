@@ -12,7 +12,7 @@
       "name": "superproj",
       "source": "./plugins/superproj",
       "description": "Project-level memory and tracking layered on Superpowers: PRD intake, roadmap, decision log, follow-ups, lessons learned.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "author": {
         "name": "Magnus Engqvist"
       },
