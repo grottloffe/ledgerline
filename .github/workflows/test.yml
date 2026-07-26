@@ -43,3 +43,21 @@ jobs:
         run: npm test
 
       # Tier 3 is agent-driven and cannot run here; see tests/tier3/README.md.
+
+  # One stable check name that summarises the whole matrix. Nothing requires it
+  # yet -- it exists so that turning on "require status checks" is a one-switch
+  # change that does not have to name every matrix leg. Requiring the legs
+  # directly would be brittle: changing the matrix orphans a required check,
+  # and a required check that never runs blocks merges forever.
+  gate:
+    needs: test
+    # Without always(), this job is skipped when the matrix fails, and a skipped
+    # check reports as neutral rather than failing -- which would defeat it.
+    if: always()
+    runs-on: ubuntu-latest
+    name: gate
+    steps:
+      - name: Every matrix leg must have succeeded
+        run: |
+          echo "matrix result: ${{ needs.test.result }}"
+          [ "${{ needs.test.result }}" = "success" ]
