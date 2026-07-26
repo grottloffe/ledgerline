@@ -26,10 +26,14 @@ Ledgerline is that missing layer.
 This repository is both a marketplace and the plugin. From Claude Code:
 
 ```
-/plugin marketplace add C:\Code\Ledgerline
+/plugin marketplace add grottloffe/ledgerline
 /plugin install ledgerline@ledgerline-marketplace
 /reload-plugins
 ```
+
+If you are working on Ledgerline itself, point the marketplace at your clone
+instead — `/plugin marketplace add ./path/to/ledgerline` — so an install picks up
+local edits.
 
 Install at **user** scope so it is available in every project. The plugin itself
 holds no project data — each project keeps its own ledger in its own repo.
