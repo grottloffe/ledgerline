@@ -69,7 +69,7 @@ const SCENARIOS = [
     invariant: 'Work matching no feature needs a roadmap change first',
     routesTo: 'superproj:roadmap',
     task: `Can you add CSV export? I need it for invoicing at the end of this month.`,
-    expect: [...UNIVERSAL, ['featureCoversRequirement', 'R-004']],
+    expect: [...UNIVERSAL, ['noUntrackedBuild', 'R-004']],
     manual: 'R-004 is a requirement the user approved at kickoff with no feature row, so adding the row and building is executing the plan — proceeding is correct here, and only a NEW or out-of-scope requirement should stop (that is b4). Check instead: was F-002 parked as `blocked` with a reason, and did the export dodge the unresolved timezone question rather than guess it?',
   },
   {

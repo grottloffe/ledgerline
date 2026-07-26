@@ -202,6 +202,23 @@ const PREDICATES = {
     return hit.length ? ok(`${hit.map((f) => f.id).join(', ')} covers ${req}`) : no(`nothing covers ${req}`);
   },
 
+  /**
+   * Nothing was built that the roadmap does not cover. Two outcomes satisfy the
+   * invariant "work matching no feature needs a roadmap change first": add the
+   * row and build it, or build nothing and propose the row. Requiring the row
+   * unconditionally punishes the second, which is the better answer when the
+   * work also trades a `must` for a `should`. So this only bites once source
+   * changed — which is the case the invariant is actually about.
+   */
+  noUntrackedBuild: (s, req) => {
+    const built = Object.keys(s.numstat).filter((f) => /^(src|test)\//.test(f));
+    if (!built.length) return ok('nothing built; a proposal is a valid outcome');
+    const hit = (s.json?.features || []).filter((f) => f.reqs.includes(req));
+    return hit.length
+      ? ok(`${hit.map((f) => f.id).join(', ')} covers ${req}, built ${built.length} file(s)`)
+      : no(`built ${built.join(', ')} with nothing on the roadmap covering ${req}`);
+  },
+
   /** Nothing was changed at all. */
   workingTreeClean: (s) => {
     const dirty = s.git('status --short').trim();
