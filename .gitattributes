@@ -1,0 +1,16 @@
+# Line endings are normalised to LF everywhere: in the repository and in the
+# working copy. Without this, a Windows checkout with core.autocrlf=true warns
+# "LF will be replaced by CRLF" on every commit, and a contributor on Linux
+# produces blobs that differ from a Windows one for no semantic reason.
+#
+# LF in the working copy is deliberate rather than a side effect: it keeps the
+# checked-out bytes identical to the stored bytes, so byte-for-byte comparisons
+# (tier 0 compares installed skill bodies against the repository) cannot fail
+# because of a platform.
+* text=auto eol=lf
+
+# Embeds NUL bytes on purpose, to prove the SessionStart hook survives a ledger
+# it cannot parse. Git would guess "binary" and leave it alone in most cases,
+# but say so explicitly — normalising this file would corrupt the exact bytes
+# it exists to exercise.
+tests/tier2-hook.test.js -text
