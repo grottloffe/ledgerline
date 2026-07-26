@@ -1,0 +1,19 @@
+{
+  "name": "superproj-marketplace",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Personal Claude Code plugins. Tests for the SuperProj plugin.",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.js\"",
+    "test:lint": "node --test tests/tier1-plugin-lint.test.js",
+    "test:engine": "node --test tests/tier2-engine.test.js",
+    "test:hook": "node --test tests/tier2-hook.test.js",
+    "tier3:prepare": "node tests/tier3/run.js prepare",
+    "tier3:grade": "node tests/tier3/run.js grade",
+    "tier3:clean": "node tests/tier3/run.js clean"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
