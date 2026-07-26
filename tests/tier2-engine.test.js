@@ -220,6 +220,28 @@ for (const c of ERROR_CASES) {
   });
 }
 
+test('the too-many-in-progress fix hint does not recommend the status the skills forbid', () => {
+  // The skills say a parked feature is `blocked`, never `planned`. This hint used
+  // to read "Move all but one back to planned or blocked" — naming the forbidden
+  // status, first — and an agent followed the tool over the prose, because the
+  // skills tell it to run `check` and fix what `check` reports. Tools outrank
+  // documentation, so the two must agree; no other test compares them.
+  const dir = makeLedgerRepo();
+  mutate(dir, 'docs/project/ROADMAP.md',
+    (t) => t.replace('| F-003 | Profile page | planned |', '| F-003 | Profile page | in-progress |'));
+  fs.writeFileSync(path.join(dir, 'docs/project/features/F-003-profile.md'),
+    dossier({ id: 'F-003', title: 'Profile page', status: 'in-progress', criteria: [[false, 'It renders']] }));
+  mutate(dir, 'docs/project/ROADMAP.md',
+    (t) => t.replace('| R-002 | — | — |\n', '| R-002 | — | docs/project/features/F-003-profile.md |\n'));
+
+  const out = findings(dir).stdout;
+  const hint = out.split(/\r?\n/).find((l) => /fix:/.test(l) && /worktree/.test(l));
+  assert.ok(hint, `no fix hint found for the in-progress limit:\n${out}`);
+  assert.match(hint, /blocked/, 'the hint must name blocked as the parking status');
+  assert.doesNotMatch(hint, /\bplanned\b(?!,? which)/,
+    `the hint recommends "planned", which every skill forbids for parking:\n  ${hint.trim()}`);
+});
+
 // ----------------------------------------------- negative fixtures: warnings
 
 const WARN_CASES = [
