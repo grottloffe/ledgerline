@@ -1,5 +1,7 @@
 # Ledgerline
 
+[![test](https://github.com/grottloffe/ledgerline/actions/workflows/test.yml/badge.svg)](https://github.com/grottloffe/ledgerline/actions/workflows/test.yml)
+
 A Claude Code plugin that gives a project **memory** — layered on top of
 [Superpowers](https://github.com/obra/superpowers), not replacing it.
 
@@ -156,6 +158,33 @@ Skill body changes take effect immediately. Changes to `hooks/hooks.json`,
 `agents/`, or the scripts need `/reload-plugins` or a restart. Bump `version` in
 both `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` when you
 want an install to pick up changes as an update.
+
+## Tests
+
+```
+npm test          # tiers 0-2: install, plugin lint, engine, hook
+```
+
+Dependency-free, so there is nothing to install first. Tier 0 checks the
+*installed* copy against the repository and **skips** when the plugin is not
+installed — that is expected in CI, and a signal to reinstall when you see it
+locally after editing.
+
+There is a third tier that `npm test` does not run. Tiers 0–2 prove the plugin
+loads and the engine works; they cannot tell you whether a real agent, handed a
+natural request, routes to the right skill and holds the invariants when a user
+pushes back. That needs live agents, so it runs on demand rather than in CI:
+
+```
+node tests/tier3/run.js canary     # ALWAYS first — proves agents see your edits
+npm run tier3:prepare              # build fixtures, print prompts to dispatch
+npm run tier3:grade
+npm run tier3:clean
+```
+
+Read [tests/tier3/README.md](tests/tier3/README.md) before running it. The
+canary step is not optional — two independent caches can serve an agent the
+*previous* version of a skill you just edited, and both fail silently green.
 
 ## Licence
 

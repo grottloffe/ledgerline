@@ -1,0 +1,43 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A newer push to the same branch makes an in-flight run irrelevant.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    # The engine claims to be cross-platform and dependency-free on Node >= 18.
+    # This matrix is what makes that claim checkable rather than aspirational.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: ['18', '20', '22', '24']
+
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }} / node ${{ matrix.node }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          # No cache: the plugin has no dependencies and no lockfile, so
+          # there is nothing to restore and no install step to speed up.
+
+      # Deliberately no `npm ci` — adding one would fail for want of a lockfile.
+      - name: Run tiers 0-2
+        run: npm test
+
+      # Tier 3 is agent-driven and cannot run here; see tests/tier3/README.md.

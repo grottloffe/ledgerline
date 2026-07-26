@@ -5,7 +5,7 @@
   "description": "Personal Claude Code plugins. Tests for the Ledgerline plugin.",
   "license": "MIT",
   "scripts": {
-    "test": "node --test \"tests/**/*.test.js\"",
+    "test": "node --test",
     "test:lint": "node --test tests/tier1-plugin-lint.test.js",
     "test:engine": "node --test tests/tier2-engine.test.js",
     "test:hook": "node --test tests/tier2-hook.test.js",
