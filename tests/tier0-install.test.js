@@ -52,7 +52,7 @@ test('the marketplace manifest has everything /plugin marketplace add needs', ()
 });
 
 test('the plugin manifest is well formed', () => {
-  assert.equal(MANIFEST.name, 'superproj');
+  assert.equal(MANIFEST.name, 'ledgerline');
   assert.match(MANIFEST.name, /^[a-z0-9-]+$/);
   assert.match(MANIFEST.version, /^\d+\.\d+\.\d+/, 'version must be semver; /plugin update compares it');
   assert.ok(MANIFEST.description, 'no description — this is what /plugin shows in the list');
@@ -90,16 +90,16 @@ test('no SKILL.md is nested where the loader will not find it', () => {
 });
 
 test('the skills the README and router advertise all exist', () => {
-  // The router table in using-superproj is the plugin's own index of itself.
-  const contract = fs.readFileSync(path.join(SKILLS_DIR, 'using-superproj', 'SKILL.md'), 'utf8');
-  const routed = [...contract.matchAll(/`\/superproj:([a-z-]+)`/g)].map((m) => m[1]);
+  // The router table in using-ledgerline is the plugin's own index of itself.
+  const contract = fs.readFileSync(path.join(SKILLS_DIR, 'using-ledgerline', 'SKILL.md'), 'utf8');
+  const routed = [...contract.matchAll(/`\/ledgerline:([a-z-]+)`/g)].map((m) => m[1]);
   assert.ok(routed.length >= 8, 'the router table looks empty');
   for (const name of routed) {
-    assert.ok(skillNames.includes(name), `the router offers /superproj:${name}, which does not exist`);
+    assert.ok(skillNames.includes(name), `the router offers /ledgerline:${name}, which does not exist`);
   }
   // Every skill except the contract itself should be reachable from the router.
   for (const name of skillNames) {
-    if (name === 'using-superproj') continue;
+    if (name === 'using-ledgerline') continue;
     assert.ok(routed.includes(name), `${name} exists but the router never offers it`);
   }
 });
@@ -177,14 +177,14 @@ function installedEntry() {
 const installed = installedEntry();
 const notInstalled = {
   skip: installed ? false
-    : 'superproj is not installed yet — run /plugin marketplace add . then /plugin install superproj@superproj-marketplace',
+    : 'ledgerline is not installed yet — run /plugin marketplace add . then /plugin install ledgerline@ledgerline-marketplace',
 };
 
 test('the installed copy is the current version', notInstalled, () => {
   assert.ok(fs.existsSync(installed.install.installPath),
     `installed_plugins.json points at ${installed.install.installPath}, which does not exist`);
   assert.equal(installed.install.version, MANIFEST.version,
-    'the installed version is behind the repository; run /plugin update superproj');
+    'the installed version is behind the repository; run /plugin update ledgerline');
 });
 
 test('every skill in the repository made it into the installed copy', notInstalled, () => {
@@ -216,6 +216,6 @@ test('the installed skill bodies match the repository byte for byte', notInstall
 test('the installed hook script is present and runnable', notInstalled, () => {
   const script = path.join(installed.install.installPath, 'scripts', 'session-start.js');
   assert.ok(fs.existsSync(script), 'the SessionStart hook script did not get installed');
-  assert.ok(fs.existsSync(path.join(installed.install.installPath, 'scripts', 'sp.js')),
-    'sp.js did not get installed; every skill invokes it');
+  assert.ok(fs.existsSync(path.join(installed.install.installPath, 'scripts', 'ledger.js')),
+    'ledger.js did not get installed; every skill invokes it');
 });

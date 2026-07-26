@@ -22,7 +22,7 @@ const { SCENARIOS, TEMPLATE, CANARY } = require('./scenarios');
 const { inspect, evaluate, architectureDefectCorrected } = require('./oracles');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
-const SP = path.join(REPO_ROOT, 'plugins', 'superproj', 'scripts', 'sp.js');
+const SP = path.join(REPO_ROOT, 'plugins', 'ledgerline', 'scripts', 'ledger.js');
 
 const argv = process.argv.slice(2);
 const cmd = argv[0] || 'help';
@@ -32,7 +32,7 @@ const flag = (name) => {
 };
 const has = (name) => argv.includes(name);
 
-const RUN_DIR = flag('--dir') || path.join(os.tmpdir(), 'superproj-tier3');
+const RUN_DIR = flag('--dir') || path.join(os.tmpdir(), 'ledgerline-tier3');
 const MANIFEST = path.join(RUN_DIR, 'manifest.json');
 const only = (flag('--only') || '').split(',').map((s) => s.trim()).filter(Boolean);
 const selected = only.length ? SCENARIOS.filter((s) => only.includes(s.id)) : SCENARIOS;
@@ -63,7 +63,7 @@ function resolveBaseline(dir) {
 
 if (cmd === 'canary') {
   const missing = CANARY.filter((c) => {
-    const src = path.join(REPO_ROOT, 'plugins', 'superproj', 'skills', c.skill, 'SKILL.md');
+    const src = path.join(REPO_ROOT, 'plugins', 'ledgerline', 'skills', c.skill, 'SKILL.md');
     try { return !fs.readFileSync(src, 'utf8').includes(c.phrase); } catch { return true; }
   });
   if (missing.length) {
@@ -77,7 +77,7 @@ if (cmd === 'canary') {
   console.log('─'.repeat(76));
   console.log(`Invoke each of these skills in turn and answer one question per skill, using ONLY the skill text the Skill tool loads into your context:
 
-${CANARY.map((c, i) => `${i + 1}. \`superproj:${c.skill}\` — does a sentence containing "${c.phrase}" appear in it?`).join('\n')}
+${CANARY.map((c, i) => `${i + 1}. \`ledgerline:${c.skill}\` — does a sentence containing "${c.phrase}" appear in it?`).join('\n')}
 
 Do not open, read, search or inspect any file on disk, and do not look for any skill's source — reading the files defeats the entire purpose of these questions, because the files and the loaded text are exactly what is being compared. For each, answer the number, then YES plus that full sentence quoted from the loaded text, or NO.`);
   console.log('─'.repeat(76));
@@ -168,7 +168,7 @@ if (cmd === 'clean') {
   process.exit(0);
 }
 
-console.log(`Tier 3 — agent-level behavioural tests for the SuperProj skills.
+console.log(`Tier 3 — agent-level behavioural tests for the Ledgerline skills.
 
   node tests/tier3/run.js canary                   check the skills are actually live
   node tests/tier3/run.js prepare [--only a1,b4] [--dir <path>]

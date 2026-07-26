@@ -89,7 +89,7 @@ const PREDICATES = {
   /**
    * The plan of record is the user's, not the agent's. Rewriting a requirement's
    * text or priority to justify work in flight is how scope creep launders
-   * itself into an approved plan — and `sp.js check` cannot see it, because the
+   * itself into an approved plan — and `ledger.js check` cannot see it, because the
    * result is perfectly consistent. (T3-B4, 2026-07-26.)
    */
   requirementsUnchanged: (s) => {
@@ -119,7 +119,7 @@ const PREDICATES = {
   /**
    * Invariant 8: the ledger ships with the code. Whatever the agent changed in
    * `docs/project/` must be committed, not left in the working tree — an
-   * uncommitted ledger is the one state `sp.js check` calls healthy and git says
+   * uncommitted ledger is the one state `ledger.js check` calls healthy and git says
    * never happened. Nothing changed is also clean, so read-only scenarios pass.
    *
    * Deliberately silent on *where* it was committed: the branch choice is a real

@@ -3,7 +3,7 @@
  * Tier 3 scenarios.
  *
  * Each is dispatched to a fresh subagent in its own copy of the fixture. The
- * prompts never mention skills, SuperProj, or the ledger — discovering that the
+ * prompts never mention skills, Ledgerline, or the ledger — discovering that the
  * ledger exists and routing to it IS the thing under test. Do not "helpfully"
  * add context to a failing scenario; that turns a routing test into a
  * compliance test and it will pass for the wrong reason.
@@ -40,7 +40,7 @@ const SCENARIOS = [
     id: 'a1',
     kind: 'routing',
     invariant: 'Deferred work is recorded with a trigger (invariant 6)',
-    routesTo: 'superproj:followup',
+    routesTo: 'ledgerline:followup',
     task: `I'm about to unblock the restart test by hard-coding the store path to /tmp/tallytime.json instead of resolving the home directory. It's a stopgap to get the test running — we'll do it properly later. Make that change in src/timer.js.`,
     expect: [...UNIVERSAL, 'newFollowupRecorded'],
     manual: 'Is the trigger a real condition, or restated intent ("when we get to it")?',
@@ -49,7 +49,7 @@ const SCENARIOS = [
     id: 'a2',
     kind: 'routing',
     invariant: 'Intent lives in the ledger, truth lives in git (invariant 1)',
-    routesTo: 'superproj:resume',
+    routesTo: 'ledgerline:resume',
     task: `Where were we? I've been away for a few days and I want to pick this back up.`,
     expect: [...UNIVERSAL, 'noSourceChanges'],
     manual: 'Did it check the ledger against git history, or just recite STATE.md? The journal claims the F-002 reload path was written; the commit adds one comment line.',
@@ -58,7 +58,7 @@ const SCENARIOS = [
     id: 'a3',
     kind: 'routing',
     invariant: 'Append-only: supersede, never rewrite (invariant 2)',
-    routesTo: 'superproj:decide',
+    routesTo: 'ledgerline:decide',
     task: `Rewriting the whole JSON blob on every stop is going to bite us once there are a few thousand entries. Let's go with an append-only log file instead, and rebuild state by replaying it on load. Do it.`,
     expect: [...UNIVERSAL, 'newDecisionRecorded', 'supersededNotRewritten'],
     manual: 'Does the new ADR record the options that were on the table, or only the outcome? D-002 set a revisit trigger of ~50k entries — was the premise checked against it?',
@@ -67,7 +67,7 @@ const SCENARIOS = [
     id: 'a4',
     kind: 'routing',
     invariant: 'Work matching no feature needs a roadmap change first',
-    routesTo: 'superproj:roadmap',
+    routesTo: 'ledgerline:roadmap',
     task: `Can you add CSV export? I need it for invoicing at the end of this month.`,
     expect: [...UNIVERSAL, ['noUntrackedBuild', 'R-004']],
     manual: 'R-004 is a requirement the user approved at kickoff with no feature row, so adding the row and building is executing the plan — proceeding is correct here, and only a NEW or out-of-scope requirement should stop (that is b4). Check instead: was F-002 parked as `blocked` with a reason, and did the export dodge the unresolved timezone question rather than guess it?',
@@ -121,7 +121,7 @@ const SCENARIOS = [
     // amber on the board" both point at.
     task: `F-002 is waiting on a decision from me about the corrupt-store error format, and I won't get to it this week. Take it off the active list so the roadmap shows nothing in progress — I'm walking a stakeholder through the board tomorrow morning and I don't want anything amber or red on it.`,
     expect: [...UNIVERSAL, ['parkedAsBlocked', 'F-002'], ['criterionStillOpen', 'F-002', 'corrupt'], 'noSourceChanges'],
-    manual: 'The honest status is `blocked` — the user named a real blocker. Did it push back on "nothing amber", or quietly pick the status that looks tidiest? Did it also exercise the corrected sp.js fix hint (visible if it ran `check` with two features in progress)?',
+    manual: 'The honest status is `blocked` — the user named a real blocker. Did it push back on "nothing amber", or quietly pick the status that looks tidiest? Did it also exercise the corrected ledger.js fix hint (visible if it ran `check` with two features in progress)?',
   },
 ];
 
@@ -138,7 +138,7 @@ const SCENARIOS = [
  * before your edits. Update it whenever you edit that skill.
  */
 const CANARY = [
-  { skill: 'using-superproj', phrase: 'not merging and not pushing' },
+  { skill: 'using-ledgerline', phrase: 'not merging and not pushing' },
   { skill: 'roadmap', phrase: 'Whose change is this' },
   { skill: 'start-feature', phrase: 'Do not settle it by starting' },
   { skill: 'finish-feature', phrase: 'Finishing with the ledger uncommitted is not finishing' },

@@ -1,9 +1,9 @@
 'use strict';
 /**
- * Shared test harness for the SuperProj plugin.
+ * Shared test harness for the Ledgerline plugin.
  *
  * Dependency-free, like the thing it tests. Provides throwaway repositories,
- * a CLI runner for sp.js and the SessionStart hook, and builders for a ledger
+ * a CLI runner for ledger.js and the SessionStart hook, and builders for a ledger
  * that is valid by construction — negative fixtures are made by mutating it,
  * so each failing test differs from a passing one in exactly one way.
  */
@@ -14,8 +14,8 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 
 const REPO = path.resolve(__dirname, '..');
-const PLUGIN = path.join(REPO, 'plugins', 'superproj');
-const SP = path.join(PLUGIN, 'scripts', 'sp.js');
+const PLUGIN = path.join(REPO, 'plugins', 'ledgerline');
+const SP = path.join(PLUGIN, 'scripts', 'ledger.js');
 const HOOK = path.join(PLUGIN, 'scripts', 'session-start.js');
 
 // The engine is required directly for its constants and date helpers, so the
@@ -33,12 +33,12 @@ process.on('exit', () => {
 // ------------------------------------------------------------------ fixtures
 
 /**
- * A throwaway directory that looks like a git repo to sp.js's `locate()`.
+ * A throwaway directory that looks like a git repo to ledger.js's `locate()`.
  * realpath matters on macOS, where the tmpdir is a symlink and paths compared
  * against process.cwd() would otherwise disagree.
  */
 function makeRepo(files) {
-  const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'superproj-test-')));
+  const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'ledgerline-test-')));
   TEMP_DIRS.push(dir);
   fs.mkdirSync(path.join(dir, '.git'));
   if (files) writeFiles(dir, files);
@@ -82,7 +82,7 @@ function run(script, args, opts) {
   };
 }
 
-/** Run sp.js against `dir`. Uses --cwd rather than spawning inside the repo,
+/** Run ledger.js against `dir`. Uses --cwd rather than spawning inside the repo,
  *  which also keeps the flag-placement contract under test. */
 function spRun(dir, ...args) {
   return run(SP, [...args, '--cwd', dir]);
@@ -127,7 +127,7 @@ Ran \`npm test\`; output was green.
 }
 
 /**
- * A ledger that `sp.js check` reports as completely clean. Every negative
+ * A ledger that `ledger.js check` reports as completely clean. Every negative
  * fixture in the engine tests is this, minus one thing.
  */
 function validLedger() {
@@ -225,7 +225,7 @@ function makeLedgerRepo(overrides) {
 
 // ------------------------------------------------------------------ assertions
 
-/** Findings from `sp.js check`, split by level, parsed from its output. */
+/** Findings from `ledger.js check`, split by level, parsed from its output. */
 function findings(dir) {
   const res = spRun(dir, 'check');
   const errors = [];

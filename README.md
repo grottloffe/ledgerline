@@ -1,4 +1,4 @@
-# SuperProj
+# Ledgerline
 
 A Claude Code plugin that gives a project **memory** — layered on top of
 [Superpowers](https://github.com/obra/superpowers), not replacing it.
@@ -9,25 +9,25 @@ anything between features. Every cycle starts from a blank page, so across weeks
 of work nothing tracks what is left, what was decided, what was knowingly left
 undone, or what went wrong last time.
 
-SuperProj is that missing layer.
+Ledgerline is that missing layer.
 
 | Question | Answered by |
 |---|---|
-| What are we building, and why? | SuperProj — `PRD.md` |
-| What next, and what blocks it? | SuperProj — `ROADMAP.md` |
+| What are we building, and why? | Ledgerline — `PRD.md` |
+| What next, and what blocks it? | Ledgerline — `ROADMAP.md` |
 | How do we build *this one thing* well? | **Superpowers** |
-| Why is it like this? | SuperProj — `DECISIONS.md` |
-| What did we knowingly leave undone? | SuperProj — `FOLLOWUPS.md` |
-| What should we do differently? | SuperProj — `LESSONS.md` |
-| Where was the thread dropped? | SuperProj — `JOURNAL.md` |
+| Why is it like this? | Ledgerline — `DECISIONS.md` |
+| What did we knowingly leave undone? | Ledgerline — `FOLLOWUPS.md` |
+| What should we do differently? | Ledgerline — `LESSONS.md` |
+| Where was the thread dropped? | Ledgerline — `JOURNAL.md` |
 
 ## Install
 
 This repository is both a marketplace and the plugin. From Claude Code:
 
 ```
-/plugin marketplace add C:\Code\SuperProj
-/plugin install superproj@superproj-marketplace
+/plugin marketplace add C:\Code\Ledgerline
+/plugin install ledgerline@ledgerline-marketplace
 /reload-plugins
 ```
 
@@ -38,22 +38,22 @@ Verify:
 
 ```
 /plugin list
-/superproj:status
+/ledgerline:status
 ```
 
-Superpowers should also be installed. SuperProj works without it — it will fall
+Superpowers should also be installed. Ledgerline works without it — it will fall
 back and say so — but the handoffs are the point.
 
 ## The 30-second version
 
 ```
-/superproj:kickoff path/to/PRD.md     # or just describe the idea
-/superproj:start-feature              # picks the next unblocked feature, hands it to Superpowers
+/ledgerline:kickoff path/to/PRD.md     # or just describe the idea
+/ledgerline:start-feature              # picks the next unblocked feature, hands it to Superpowers
    …Superpowers builds it…
-/superproj:finish-feature             # verifies, harvests decisions/follow-ups/lessons, journals
-/superproj:status                     # where are we
-/superproj:resume                     # next session: reconcile ledger against git, then continue
-/superproj:milestone-review           # when a milestone closes: verify, learn, re-plan
+/ledgerline:finish-feature             # verifies, harvests decisions/follow-ups/lessons, journals
+/ledgerline:status                     # where are we
+/ledgerline:resume                     # next session: reconcile ledger against git, then continue
+/ledgerline:milestone-review           # when a milestone closes: verify, learn, re-plan
 ```
 
 A `SessionStart` hook injects a short status brief into every session, so Claude
@@ -64,7 +64,7 @@ already knows where the project stands before you type anything.
 ```
 docs/
 ├── plans/                  ← Superpowers' plans, untouched
-└── project/                ← the SuperProj ledger
+└── project/                ← the Ledgerline ledger
     ├── STATE.md            GENERATED — ~60 lines, where we are right now
     ├── PRD.md              what and why; requirements with stable IDs (R-001)
     ├── ARCHITECTURE.md     living map: stack, module map, invariants, undecided
@@ -102,19 +102,19 @@ the project stood over time. If you would rather not have it in git, add it to
 
 | Command | What it does |
 |---|---|
-| `/superproj:kickoff` | PRD intake or Socratic idea → PRD, architecture, roadmap |
-| `/superproj:resume` | Reconcile ledger against git, rebuild context, propose next action |
-| `/superproj:status` | Where we are, what is blocked, what is ready, debt position |
-| `/superproj:start-feature` | Gate + acceptance criteria, then hand off to Superpowers |
-| `/superproj:finish-feature` | Verify with evidence, harvest knowledge, close, journal |
-| `/superproj:decide` | Record a decision with its alternatives and consequences |
-| `/superproj:followup` | Register deferred work with a trigger condition |
-| `/superproj:lesson` | Record a lesson that ends in an actionable rule |
-| `/superproj:milestone-review` | Verify exit criteria, assess debt and estimates, re-plan |
-| `/superproj:roadmap` | Scope changes, re-sequencing, splits, cuts |
-| `superproj:using-superproj` | The contract Claude reads before touching the ledger |
+| `/ledgerline:kickoff` | PRD intake or Socratic idea → PRD, architecture, roadmap |
+| `/ledgerline:resume` | Reconcile ledger against git, rebuild context, propose next action |
+| `/ledgerline:status` | Where we are, what is blocked, what is ready, debt position |
+| `/ledgerline:start-feature` | Gate + acceptance criteria, then hand off to Superpowers |
+| `/ledgerline:finish-feature` | Verify with evidence, harvest knowledge, close, journal |
+| `/ledgerline:decide` | Record a decision with its alternatives and consequences |
+| `/ledgerline:followup` | Register deferred work with a trigger condition |
+| `/ledgerline:lesson` | Record a lesson that ends in an actionable rule |
+| `/ledgerline:milestone-review` | Verify exit criteria, assess debt and estimates, re-plan |
+| `/ledgerline:roadmap` | Scope changes, re-sequencing, splits, cuts |
+| `ledgerline:using-ledgerline` | The contract Claude reads before touching the ledger |
 
-Plus a read-only `superproj:superproj-auditor` agent that cross-checks the
+Plus a read-only `ledgerline:ledgerline-auditor` agent that cross-checks the
 ledger against the repository and reports drift with evidence.
 
 `decide`, `followup` and `lesson` are written to trigger **automatically** when
@@ -127,12 +127,12 @@ One dependency-free node script does all mechanical work, so Claude never
 hand-counts IDs or guesses dates:
 
 ```
-node <plugin>/scripts/sp.js status [--brief|--json]
-node <plugin>/scripts/sp.js state          # regenerate STATE.md, write-if-changed
-node <plugin>/scripts/sp.js check          # validate; exit 1 on errors
-node <plugin>/scripts/sp.js next-id D      # F|D|U|L|R|M
-node <plugin>/scripts/sp.js init           # idempotent scaffold
-node <plugin>/scripts/sp.js today
+node <plugin>/scripts/ledger.js status [--brief|--json]
+node <plugin>/scripts/ledger.js state          # regenerate STATE.md, write-if-changed
+node <plugin>/scripts/ledger.js check          # validate; exit 1 on errors
+node <plugin>/scripts/ledger.js next-id D      # F|D|U|L|R|M
+node <plugin>/scripts/ledger.js init           # idempotent scaffold
+node <plugin>/scripts/ledger.js today
 ```
 
 `check` catches duplicate IDs, more than one feature in flight, features marked

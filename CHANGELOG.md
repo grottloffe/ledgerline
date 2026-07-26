@@ -1,5 +1,40 @@
 # Changelog
 
+## 0.3.0 — 2026-07-26
+
+Renamed the project from **SuperProj** to **Ledgerline**. The old name read as a
+generic derivative of Superpowers and collided with unrelated AI developer
+tooling; the new one names what the plugin actually keeps — the ledger.
+
+This is a breaking change for anyone who has the plugin installed.
+
+- Commands move namespace: `/superproj:status` → `/ledgerline:status`, and so on
+  for all eleven skills.
+- Plugin renamed `superproj` → `ledgerline`; marketplace renamed
+  `superproj-marketplace` → `ledgerline-marketplace`; plugin directory moved to
+  `plugins/ledgerline/`.
+- The `using-superproj` contract skill is now `using-ledgerline`, and the
+  `superproj-auditor` agent is now `ledgerline-auditor`.
+- The engine script `scripts/sp.js` is now `scripts/ledger.js`. Skills and the
+  `SessionStart` hook resolve it through `${CLAUDE_PLUGIN_ROOT}`, so nothing
+  outside the plugin references it by path.
+- Existing project ledgers under `docs/project/` need no migration — the format
+  is unchanged. Prose inside a ledger that mentions the old command names is
+  cosmetic and can be left alone.
+
+To upgrade, re-add the marketplace and reinstall:
+
+```
+/plugin uninstall superproj@superproj-marketplace
+/plugin marketplace remove superproj-marketplace
+/plugin marketplace add C:\Code\SuperProj
+/plugin install ledgerline@ledgerline-marketplace
+/reload-plugins
+```
+
+Also fixes a version disagreement between `marketplace.json` (0.2.0) and
+`plugin.json` (0.2.1) that the tier1 lint test asserts against.
+
 ## 0.2.0 — 2026-07-25
 
 - **`docs/project/STATE.md`** — a generated ~60-line view of where the project stands: current milestone and exit criteria, what is in flight with its unverified acceptance criteria, what needs a decision from a person, blocked and ready work, the debt register, and recent journal entries.

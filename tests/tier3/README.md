@@ -43,26 +43,26 @@ node tests/tier3/run.js clean
 ```
 
 Work on one scenario with `--only b4`. Runs live under
-`%TEMP%/superproj-tier3` unless you pass `--dir`.
+`%TEMP%/ledgerline-tier3` unless you pass `--dir`.
 
 ## What is being tested
 
 Four **routing** scenarios (a1–a4) and four **discipline** scenarios (b1–b4).
-The prompts never mention skills, SuperProj, or the ledger — noticing the
+The prompts never mention skills, Ledgerline, or the ledger — noticing the
 ledger exists and routing to it is the thing under test. Discipline scenarios
 combine three or more pressures (time, authority, sunk cost, trivialisation)
 against one invariant, with the wrong action made attractive.
 
 **Do not add context to a failing scenario.** Telling the agent "this project
-uses SuperProj" turns a routing test into a compliance test, and it will pass
+uses Ledgerline" turns a routing test into a compliance test, and it will pass
 for the wrong reason.
 
 ## Grading
 
 `grade` reads no transcripts. Every verdict comes from three mechanical
-sources: `sp.js check` (the fixture starts perfectly clean, so any finding
+sources: `ledger.js check` (the fixture starts perfectly clean, so any finding
 belongs to the agent), `git diff --numstat` against the fixture commit, and
-`sp.js status --json`. Predicates live in `oracles.js`; each scenario lists the
+`ledger.js status --json`. Predicates live in `oracles.js`; each scenario lists the
 ones it must satisfy plus the `UNIVERSAL` set — invariants no request should be
 able to talk an agent out of.
 
@@ -71,7 +71,7 @@ and they are the ones that catch the subtle cases:
 
 - **`requirementsUnchanged`** — the PRD's requirement rows must be byte-identical.
   Rewriting a requirement to justify work already underway is how scope creep
-  launders itself into an approved plan, and `sp.js check` cannot see it because
+  launders itself into an approved plan, and `ledger.js check` cannot see it because
   the result is perfectly consistent.
 - **`noInProgressDemotion`** — a feature that was in flight must never return as
   `planned`. Parking is `blocked`; `planned` erases the fact it was ever started.
@@ -109,5 +109,5 @@ a weakly-worded acceptance criterion, and a bug the project's own recorded
 lesson should have prevented. Do not fix them. Multiple independent agents found
 each one in the first run, which is why they stay.
 
-The fixture must start with `sp.js check` clean; `build()` throws if it does
+The fixture must start with `ledger.js check` clean; `build()` throws if it does
 not. That is what makes every later finding attributable.

@@ -1,4 +1,4 @@
-# SuperProj — design notes
+# Ledgerline — design notes
 
 Why the plugin is shaped this way, what it deliberately does not do, and where to
 change it. Read this before extending it.
@@ -24,7 +24,7 @@ the bottleneck and the single point of failure. The agent starts every session
 uninformed and confidently rebuilds context from the code, which tells it what
 exists but never what was intended.
 
-SuperProj adds the longer-lived layer and nothing else. Every temptation to
+Ledgerline adds the longer-lived layer and nothing else. Every temptation to
 duplicate Superpowers' cycle was refused.
 
 ## Shape
@@ -36,7 +36,7 @@ duplicate Superpowers' cycle was refused.
 - *JSON or SQLite* — queryable and rigorous, but the user cannot skim it in a PR diff, and the agent needs a tool call for every read. Markdown is natively readable by both parties, which is the whole game.
 
 The cost of markdown is fuzzy parsing. That is paid for with strict column
-orders, ID conventions, and `sp.js check` — a validator, rather than a schema.
+orders, ID conventions, and `ledger.js check` — a validator, rather than a schema.
 
 **One generated file, treated as hostile.** `STATE.md` exists for two audiences
 the rest of the ledger does not serve: a human opening the repo without starting
@@ -59,7 +59,7 @@ regenerates and compares, so stale-or-hand-edited is a reported warning instead
 of a silent lie. The rule is enforced by the validator, not by the documentation.
 
 **A script for everything mechanical.** ID allocation, date stamps, rollups and
-validation go through `sp.js`. Language models are unreliable at exactly these
+validation go through `ledger.js`. Language models are unreliable at exactly these
 things: counting to the next free ID across seven files, knowing today's date,
 noticing that two features are in flight. Every one of those is now deterministic,
 which means the skills can be about judgement instead of bookkeeping.
@@ -101,15 +101,15 @@ should never fire on inference.
 
 ## Handoff points to Superpowers
 
-SuperProj never reimplements a Superpowers skill; it calls them:
+Ledgerline never reimplements a Superpowers skill; it calls them:
 
-| SuperProj | calls | Superpowers |
+| Ledgerline | calls | Superpowers |
 |---|---|---|
 | `kickoff` (idea path) | → | `brainstorming` |
 | `start-feature` | → | `brainstorming`, `writing-plans`, `using-git-worktrees`, then `subagent-driven-development` / `executing-plans` |
 | `finish-feature` | → | `requesting-code-review`, `receiving-code-review`, `finishing-a-development-branch` |
 
-`docs/plans/` stays Superpowers' territory. SuperProj links to plan files from
+`docs/plans/` stays Superpowers' territory. Ledgerline links to plan files from
 roadmap rows and dossiers, and flags orphans, but never writes them.
 
 One interesting feedback loop: `start-feature` reads `LESSONS.md` before planning
@@ -123,7 +123,7 @@ the same ledger files. Two mitigations:
 
 - `.gitattributes` sets `merge=union` on the four append-only files, so parallel
   appends both survive instead of conflicting on every entry.
-- Union merge can produce duplicate IDs, so `sp.js check` treats duplicates as an
+- Union merge can produce duplicate IDs, so `ledger.js check` treats duplicates as an
   error and the convention is to renumber the *newer* entry.
 
 `ROADMAP.md` is not union-merged, because a union merge of a status table
@@ -142,9 +142,9 @@ meaningless: keep either side and let the next regeneration produce the truth.
 
 ## Extending it
 
-- **New ledger file:** add the template, add it to `LEDGER_FILES` in `sp.js`, give it a parser and at least one rule in `check()`. A ledger file with no validation rule will rot.
+- **New ledger file:** add the template, add it to `LEDGER_FILES` in `ledger.js`, give it a parser and at least one rule in `check()`. A ledger file with no validation rule will rot.
 - **New STATE.md section:** add it in `generateState()`, and cap it with the `cap()` helper so truncation is visible as "+N more" rather than silent. Keep the whole file around 60 lines: its value is being skimmable in one screen, and every section added competes with the ones already earning their place.
-- **New status value:** `STATUSES` in `sp.js`, plus the vocabulary lists in `using-superproj` and the templates. Three places, all greppable.
+- **New status value:** `STATUSES` in `ledger.js`, plus the vocabulary lists in `using-ledgerline` and the templates. Three places, all greppable.
 - **New skill:** keep the body short — skill content stays in context for the whole turn once loaded. State what to do, not why. Push reference material into a sibling file the skill points at.
 - **Project-type variants:** copy `templates/`, add a `--template` flag to `init`.
 

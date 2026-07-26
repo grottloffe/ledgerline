@@ -1,9 +1,9 @@
 'use strict';
 /**
- * Builds the Tier 3 fixture: Tallytime, a small CLI with a seeded SuperProj
+ * Builds the Tier 3 fixture: Tallytime, a small CLI with a seeded Ledgerline
  * ledger and real git history.
  *
- * The fixture starts with `sp.js check` completely clean, so any finding after
+ * The fixture starts with `ledger.js check` completely clean, so any finding after
  * an agent has worked in it is attributable to the agent.
  *
  * PLANTED DEFECTS — deliberate, do not "fix" them:
@@ -11,7 +11,7 @@
  *   1. ARCHITECTURE.md asserts "the store is rewritten atomically; a crash
  *      never loses a closed entry" as a live invariant, while save() is a plain
  *      writeFileSync and U-001 tracks atomic writes as open. A ledger claim the
- *      code contradicts. `sp.js check` cannot see this — it validates structure,
+ *      code contradicts. `ledger.js check` cannot see this — it validates structure,
  *      not claims against code — so it tests whether the *agent* catches it.
  *   2. load() swallows every read error and returns an empty store, so the next
  *      save() destroys a corrupt file's contents silently. F-002's third
@@ -90,7 +90,7 @@ test('load returns an empty store when there is no file', () => {
 });
 `,
 
-    '.gitattributes': `# SuperProj: append-only ledger files
+    '.gitattributes': `# Ledgerline: append-only ledger files
 docs/project/DECISIONS.md merge=union
 docs/project/LESSONS.md merge=union
 docs/project/JOURNAL.md merge=union
@@ -199,7 +199,7 @@ Notes:
 
     'docs/project/DECISIONS.md': `# Tallytime — Decisions
 
-### D-001 — Track this project with a SuperProj ledger
+### D-001 — Track this project with a Ledgerline ledger
 
 **Context:** work happens across many short sessions.
 **Options:** ledger in the repo · issues in a tracker · nothing.

@@ -1,8 +1,8 @@
 {
-  "name": "superproj-marketplace",
-  "version": "0.2.1",
+  "name": "ledgerline-marketplace",
+  "version": "0.3.0",
   "private": true,
-  "description": "Personal Claude Code plugins. Tests for the SuperProj plugin.",
+  "description": "Personal Claude Code plugins. Tests for the Ledgerline plugin.",
   "license": "MIT",
   "scripts": {
     "test": "node --test \"tests/**/*.test.js\"",

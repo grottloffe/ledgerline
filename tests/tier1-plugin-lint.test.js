@@ -4,7 +4,7 @@
  *
  * These tests assert that the prose and the engine agree: that every command a
  * skill tells an agent to run exists, every file it points at is on disk, and
- * every vocabulary word it teaches is one `sp.js` actually accepts. Skills are
+ * every vocabulary word it teaches is one `ledger.js` actually accepts. Skills are
  * instructions to a model, so nothing here fails at runtime — it just produces
  * an agent confidently doing the wrong thing. This is the cheap net for that.
  */
@@ -143,24 +143,24 @@ test('descriptions state when to use the skill, not just what it does', () => {
 
 // ------------------------------------------------------- references resolve
 
-test('every sp.js subcommand referenced in prose exists in the engine', () => {
+test('every ledger.js subcommand referenced in prose exists in the engine', () => {
   const source = fs.readFileSync(SP, 'utf8');
   const mainSwitch = source.slice(source.indexOf('switch (cmd) {'));
-  assert.ok(mainSwitch, 'could not find the main dispatch switch in sp.js');
+  assert.ok(mainSwitch, 'could not find the main dispatch switch in ledger.js');
   const implemented = new Set([...mainSwitch.matchAll(/case '([a-z][a-z-]+)':/g)].map((m) => m[1]));
-  assert.ok(implemented.size >= 5, 'suspiciously few subcommands parsed out of sp.js');
+  assert.ok(implemented.size >= 5, 'suspiciously few subcommands parsed out of ledger.js');
 
   const referenced = new Map();
   for (const p of prose) {
-    for (const m of p.text.matchAll(/sp\.js"?\s+([a-z][a-z-]+)/g)) {
+    for (const m of p.text.matchAll(/ledger\.js"?\s+([a-z][a-z-]+)/g)) {
       if (!referenced.has(m[1])) referenced.set(m[1], p.label);
     }
   }
-  assert.ok(referenced.size > 0, 'no sp.js invocations found in the skills — is the engine still wired up?');
+  assert.ok(referenced.size > 0, 'no ledger.js invocations found in the skills — is the engine still wired up?');
 
   for (const [cmd, where] of referenced) {
     assert.ok(implemented.has(cmd),
-      `${where} tells the agent to run \`sp.js ${cmd}\`, which the engine does not implement (has: ${[...implemented].sort().join(', ')})`);
+      `${where} tells the agent to run \`ledger.js ${cmd}\`, which the engine does not implement (has: ${[...implemented].sort().join(', ')})`);
   }
 });
 
@@ -174,12 +174,12 @@ test('every plugin file referenced through CLAUDE_PLUGIN_ROOT exists', () => {
   }
 });
 
-test('every /superproj: cross-reference resolves to a real skill', () => {
+test('every /ledgerline: cross-reference resolves to a real skill', () => {
   const names = new Set(skills.map((s) => s.dir));
   for (const p of prose) {
-    for (const m of p.text.matchAll(/\/superproj:([a-z-]+)/g)) {
+    for (const m of p.text.matchAll(/\/ledgerline:([a-z-]+)/g)) {
       assert.ok(names.has(m[1]),
-        `${p.label} points at /superproj:${m[1]}, which is not a skill (have: ${[...names].sort().join(', ')})`);
+        `${p.label} points at /ledgerline:${m[1]}, which is not a skill (have: ${[...names].sort().join(', ')})`);
     }
   }
 });
@@ -198,7 +198,7 @@ test('the hook manifest points at a script that exists and parses', () => {
 });
 
 test('both scripts are syntactically valid', () => {
-  for (const script of ['sp.js', 'session-start.js']) {
+  for (const script of ['ledger.js', 'session-start.js']) {
     const res = spawnSync(process.execPath, ['--check', path.join(PLUGIN, 'scripts', script)], { encoding: 'utf8' });
     assert.equal(res.status, 0, `${script} does not parse: ${res.stderr}`);
   }
@@ -214,27 +214,27 @@ function vocabularyLine(text, label) {
 }
 
 test('feature status vocabulary in the docs matches the engine constant', () => {
-  const contract = skills.find((s) => s.dir === 'using-superproj').text;
+  const contract = skills.find((s) => s.dir === 'using-ledgerline').text;
   assert.deepEqual(vocabularyLine(contract, 'Features:'), sp.STATUSES,
-    'using-superproj teaches a different feature vocabulary than sp.js enforces');
+    'using-ledgerline teaches a different feature vocabulary than ledger.js enforces');
 
   const roadmapTpl = fs.readFileSync(path.join(TEMPLATES_DIR, 'ROADMAP.md'), 'utf8');
   assert.deepEqual(vocabularyLine(roadmapTpl, 'Status vocabulary (features):'), sp.STATUSES,
-    'the ROADMAP template teaches a different feature vocabulary than sp.js enforces');
+    'the ROADMAP template teaches a different feature vocabulary than ledger.js enforces');
 });
 
 test('follow-up status vocabulary matches what check() accepts', () => {
-  const contract = skills.find((s) => s.dir === 'using-superproj').text;
+  const contract = skills.find((s) => s.dir === 'using-ledgerline').text;
   assert.deepEqual(vocabularyLine(contract, 'Follow-ups:'), ['open', 'closed', 'dropped']);
 });
 
 test('milestone vocabulary includes the words the engine keys on', () => {
-  const contract = skills.find((s) => s.dir === 'using-superproj').text;
+  const contract = skills.find((s) => s.dir === 'using-ledgerline').text;
   const documented = vocabularyLine(contract, 'Milestones:');
   // activeMilestone() looks for status 'active' and treats 'done' as finished.
   for (const word of ['active', 'done']) {
     assert.ok(documented.includes(word),
-      `milestone vocabulary omits "${word}", which sp.js keys on`);
+      `milestone vocabulary omits "${word}", which ledger.js keys on`);
   }
 });
 

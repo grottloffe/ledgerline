@@ -1,6 +1,6 @@
 'use strict';
 /**
- * Tier 2a — integration tests for sp.js against real ledgers on disk.
+ * Tier 2a — integration tests for ledger.js against real ledgers on disk.
  *
  * Everything runs the CLI in a throwaway repo, because the CLI is what the
  * skills actually invoke. The negative fixtures matter most: every skill ends
@@ -110,7 +110,7 @@ test('a freshly scaffolded ledger has no errors, only warnings', () => {
 test('template placeholder IDs are not counted, but seeded real ones are', () => {
   // The negative lookahead in idHeadings/idRows is what keeps `### L-0NN` in a
   // template from being read as lesson L-0. DECISIONS.md deliberately ships one
-  // genuine entry (D-001, "track this project with a SuperProj ledger"), so a
+  // genuine entry (D-001, "track this project with a Ledgerline ledger"), so a
   // fresh project starts at D-002 — that asymmetry is the thing worth pinning.
   const dir = makeRepo();
   spRun(dir, 'init');
@@ -382,10 +382,10 @@ test('ready-to-start respects dependency order', () => {
 test('status --brief is the SessionStart payload and points at the contract skill', () => {
   const dir = makeLedgerRepo();
   const out = spRun(dir, 'status', '--brief').stdout;
-  assert.match(out, /SuperProj ledger at docs\/project\//);
+  assert.match(out, /Ledgerline ledger at docs\/project\//);
   assert.match(out, /project "Demo" \(1\/3 features done\)/);
   assert.match(out, /In flight: F-002 Sign in \[in-progress\]/);
-  assert.match(out, /superproj:using-superproj/, 'the brief must route the model to the contract');
+  assert.match(out, /ledgerline:using-ledgerline/, 'the brief must route the model to the contract');
   assert.ok(out.length < 9000, 'the brief is injected into every session; keep it small');
 });
 
@@ -393,7 +393,7 @@ test('status on a repo with no ledger explains itself instead of crashing', () =
   const dir = makeRepo();
   const res = spRun(dir, 'status');
   assert.equal(res.status, 0);
-  assert.match(res.stdout, /No SuperProj ledger found/);
+  assert.match(res.stdout, /No Ledgerline ledger found/);
   assert.match(res.stdout, /kickoff/);
 });
 
@@ -411,7 +411,7 @@ test('the ledger is found from a nested subdirectory', () => {
 test('flags work before or after the subcommand', () => {
   const dir = makeLedgerRepo();
   const { spawnSync } = require('child_process');
-  const sp = path.join(__dirname, '..', 'plugins', 'superproj', 'scripts', 'sp.js');
+  const sp = path.join(__dirname, '..', 'plugins', 'ledgerline', 'scripts', 'ledger.js');
   const before = spawnSync(process.execPath, [sp, '--cwd', dir, 'next-id', 'D'], { encoding: 'utf8', input: '' });
   const after = spawnSync(process.execPath, [sp, 'next-id', 'D', '--cwd', dir], { encoding: 'utf8', input: '' });
   assert.equal(before.stdout.trim(), 'D-002');
@@ -422,7 +422,7 @@ test('an unknown subcommand prints usage and exits 2', () => {
   const dir = makeLedgerRepo();
   const res = spRun(dir, 'frobnicate');
   assert.equal(res.status, 2);
-  assert.match(res.stderr, /usage: node sp\.js/);
+  assert.match(res.stderr, /usage: node ledger\.js/);
 });
 
 test('today emits both stamps the skills ask for', () => {
@@ -472,6 +472,6 @@ test('a corrupt ledger degrades instead of crashing', () => {
   const dir = makeLedgerRepo({ 'docs/project/ROADMAP.md': '# Roadmap\n\nnot a table at all\n' });
   for (const cmd of [['check'], ['status', '--json'], ['state'], ['next-id', 'F']]) {
     const res = spRun(dir, ...cmd);
-    assert.notEqual(res.status, 3, `sp.js ${cmd.join(' ')} threw: ${res.stderr}`);
+    assert.notEqual(res.status, 3, `ledger.js ${cmd.join(' ')} threw: ${res.stderr}`);
   }
 });

@@ -1,5 +1,5 @@
 {
-  "name": "superproj-marketplace",
+  "name": "ledgerline-marketplace",
   "owner": {
     "name": "Magnus Engqvist",
     "email": "magnus.engqvist@gmail.com"
@@ -9,10 +9,10 @@
   },
   "plugins": [
     {
-      "name": "superproj",
-      "source": "./plugins/superproj",
+      "name": "ledgerline",
+      "source": "./plugins/ledgerline",
       "description": "Project-level memory and tracking layered on Superpowers: PRD intake, roadmap, decision log, follow-ups, lessons learned.",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "author": {
         "name": "Magnus Engqvist"
       },
