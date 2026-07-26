@@ -23,9 +23,10 @@ thing most likely to invalidate the design early), then value.
 
 Refuse to start if:
 
-- Something is already `in-progress` in this worktree. Finish or park it first.
+- Something is already `in-progress` in this worktree. Finish or park it first. Parking is `blocked` with the reason in the roadmap row and a status log line in the dossier — never `planned`, which claims the work never began and throws away the criteria progress. Leave every unticked criterion exactly as it is.
+- Parking it would trade a higher priority for a lower one. Requirement priority outranks whatever is nearest to hand: if the parked feature serves a `must` and the new one a `should` or `could`, say that plainly and let the user choose. Do not settle it by starting.
 - Dependencies are not `done`. Say which, and offer to start that instead.
-- The feature maps to no requirement. That is scope creep → `/superproj:roadmap`.
+- The feature maps to no requirement. That is scope creep → `/superproj:roadmap`, and that skill stops for agreement before anything gets built. Do not route through it and carry on in the same turn.
 - An open question in `PRD.md` blocks it. Resolve the question first; building
   past an unresolved question is how you get work that has to be thrown away.
 
@@ -48,10 +49,14 @@ highest-leverage minute in the whole cycle.
 ## 3. Open the work
 
 Set status `in-progress` in both `ROADMAP.md` and the dossier, add a status log
-line, and record the branch or worktree.
+line, and **record where the work will land** — the branch name or worktree path,
+written into the dossier. Decide it once, here, from what the repo already does:
+if recent history shows feature branches merging in, make one; if history is
+linear on the default branch, work there. `finish-feature` reads this line
+instead of guessing, which is the whole reason it is worth a sentence.
 
 Use the Superpowers `using-git-worktrees` skill for isolation if the project
-works that way. Note the worktree path in the dossier so the next session can
+works that way, and note the worktree path in the dossier so the next session can
 find it.
 
 ## 4. Hand to Superpowers

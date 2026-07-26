@@ -52,9 +52,18 @@ or they get deleted. A TODO with no follow-up is a lie.
 
 ## 4. Land it
 
+The dossier records where this work lives (`start-feature` step 3). Commit there
+— ledger and code together, so they land as one change. If the dossier says
+nothing, follow what the repo's recent history does rather than inventing a
+scheme, and write down which you picked.
+
 Use `superpowers:finishing-a-development-branch` for the merge/PR decision, or if
-it is unavailable, ask whether this merges or becomes a PR and do that. The
-ledger updates belong in the same branch as the work, so they land together.
+it is unavailable, ask whether this merges or becomes a PR and do that.
+
+**Finishing with the ledger uncommitted is not finishing.** `git status` must be
+clean before you report — an uncommitted ledger is the one state `sp.js check`
+calls healthy and git says never happened, and it is invisible in exactly the
+session that would have caught it.
 
 Regenerate and validate before you call this finished:
 

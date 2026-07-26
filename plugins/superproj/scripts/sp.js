@@ -331,7 +331,7 @@ function check(m, opts) {
   const inProgress = m.features.filter((f) => f.status === 'in-progress');
   if (inProgress.length > 1) {
     E(`${inProgress.length} features are in-progress (${inProgress.map((f) => f.id).join(', ')}); the limit is 1 per worktree.`,
-      'Move all but one back to planned or blocked, or confirm each lives in its own worktree.');
+      'Park all but one as blocked, with the reason — not planned, which claims the work never started. Or confirm each lives in its own worktree.');
   }
 
   for (const f of m.features) {

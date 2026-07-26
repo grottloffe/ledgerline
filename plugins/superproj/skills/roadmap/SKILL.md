@@ -33,12 +33,36 @@ the user than compliance:
 - Does it conflict with a `must` already committed to, or with a recorded decision? Name the ID.
 - Does it invalidate work in flight? If a feature is `in-progress` and this changes its criteria, stop that feature first rather than moving the target mid-build.
 - Is this actually a follow-up (small, deferrable, trigger-shaped) rather than a roadmap item?
+- Is an existing requirement being reworded or reprioritised to fit work someone wants to do? That is a scope change in a roadmap change's clothes. Name it as one.
 - If the roadmap has grown twice without anything being cut, say so. Roadmaps that only accumulate stop being plans.
 
-Then make the change the user wants. Being the one who names the cost is the job;
-being the one who refuses is not.
+Naming the cost is the job. Refusing the user's plan is not — but neither is
+approving it on their behalf, which is what step 3 is about.
 
-## 3. Apply it
+## 3. Whose change is this?
+
+| The user asked for | Then |
+|---|---|
+| the plan to change — "can we add X", "drop Y", "Z is more important now" | apply it, commit, report, done |
+| *work* that only needs a feature row, under a requirement they already approved | apply it and build — this is executing the plan, not changing it |
+| *work* that needs a **new** requirement, an existing one reworded or reprioritised, or something the plan puts out of scope | write it out and **stop** |
+
+Only the third row stops, and there you are being asked to authorise your own
+work. Draft the exact rows — IDs from the script, status, deps, the requirement
+they map to — **in your reply, not in the files**, so that agreeing costs one
+word and the tree is still clean if it does not come. Then end your turn. Do not
+read "just do it" or a deadline as agreement to the plan change; the user asked
+for a feature, not for the roadmap to be rewritten around it.
+
+**Requirement text and priority belong to the user.** Adding an `R-` row for
+something genuinely new is this skill's job. Editing an existing row's wording
+or its `must`/`should`/`could` is not, ever, when the effect is to make work in
+flight compliant. If the requirement is wrong, quote it, say what it should say,
+and stop. A `could` does not become a `should` because someone asked for it in
+passing — and an out-of-scope note plus a decision that already ruled on it are
+two refusals, not an absence of one.
+
+## 4. Apply it
 
 ```
 node "${CLAUDE_PLUGIN_ROOT}/scripts/sp.js" next-id F      # or R, or M
@@ -53,7 +77,7 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/sp.js" check
 - Update `PRD.md` open questions if this settles or raises one.
 - Journal entry: what changed, why, what it displaced.
 
-## 4. Report
+## 5. Report
 
 The diff in plain terms: what was added, what moved, what got dropped, and what
 the current milestone now contains. If the change pushed a `must` requirement

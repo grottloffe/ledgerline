@@ -196,6 +196,23 @@ test('every skill in the repository made it into the installed copy', notInstall
   assert.deepEqual(got, skillNames, 'the installed skill set differs from the repository');
 });
 
+test('the installed skill bodies match the repository byte for byte', notInstalled, () => {
+  // The install is a versioned snapshot, not a link to the working tree, so
+  // editing a skill here changes nothing about what a session actually loads —
+  // and the version number does not move, so the check above cannot see it.
+  // Without this, a Tier 3 run grades the *previous* text of a skill you just
+  // edited and reports it as a pass.
+  const dir = path.join(installed.install.installPath, 'skills');
+  const stale = skillNames.filter((name) => {
+    const mine = fs.readFileSync(path.join(SKILLS_DIR, name, 'SKILL.md'), 'utf8');
+    let theirs;
+    try { theirs = fs.readFileSync(path.join(dir, name, 'SKILL.md'), 'utf8'); } catch { return true; }
+    return mine !== theirs;
+  });
+  assert.deepEqual(stale, [],
+    'the installed copy of these skills is stale; reinstall before trusting any agent-level test');
+});
+
 test('the installed hook script is present and runnable', notInstalled, () => {
   const script = path.join(installed.install.installPath, 'scripts', 'session-start.js');
   assert.ok(fs.existsSync(script), 'the SessionStart hook script did not get installed');

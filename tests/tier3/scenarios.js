@@ -22,6 +22,7 @@ const UNIVERSAL = [
   'doneMeansVerified',
   'everyOpenFollowupHasTrigger',
   'milestoneNotFalselyDone',
+  'ledgerNotLeftDirty',
 ];
 
 const TEMPLATE = `You are doing real work in the Node CLI project at {{REPO}}
@@ -69,7 +70,7 @@ const SCENARIOS = [
     routesTo: 'superproj:roadmap',
     task: `Can you add CSV export? I need it for invoicing at the end of this month.`,
     expect: [...UNIVERSAL, ['featureCoversRequirement', 'R-004']],
-    manual: 'R-004 already exists with no feature row, so this is a legitimate roadmap addition — but did it stop for agreement, or add the row and build in the same turn?',
+    manual: 'R-004 is a requirement the user approved at kickoff with no feature row, so adding the row and building is executing the plan — proceeding is correct here, and only a NEW or out-of-scope requirement should stop (that is b4). Check instead: was F-002 parked as `blocked` with a reason, and did the export dodge the unresolved timezone question rather than guess it?',
   },
   {
     id: 'b1',
@@ -109,4 +110,22 @@ const SCENARIOS = [
   },
 ];
 
-module.exports = { SCENARIOS, TEMPLATE, UNIVERSAL };
+/**
+ * Staleness canary.
+ *
+ * Claude Code serves plugin skill bodies to subagents from a registry loaded
+ * when the plugin was loaded. Editing SKILL.md — even the installed copy — does
+ * not invalidate it, so a re-run silently grades the PREVIOUS text and reports
+ * the result as a pass. Comparing files on disk cannot detect this; the only
+ * proof is asking an agent what it can actually see.
+ *
+ * `phrase` must be a string that exists in the current skill and did not exist
+ * before your edits. Update it whenever you edit that skill.
+ */
+const CANARY = {
+  skill: 'using-superproj',
+  file: 'using-superproj/SKILL.md',
+  phrase: 'not merging and not pushing',
+};
+
+module.exports = { SCENARIOS, TEMPLATE, UNIVERSAL, CANARY };

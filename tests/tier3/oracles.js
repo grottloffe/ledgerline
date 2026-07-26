@@ -38,7 +38,14 @@ function inspect(dir, spPath, baselineSha) {
 
   const at = (ref, rel) => git(dir, `show ${ref}:${rel}`);
 
-  return { dir, base, errors, warnings, json, numstat, at, git: (c) => git(dir, c) };
+  // Every predicate below reads this one worktree. An agent may legitimately
+  // satisfy the one-in-progress invariant by branching into another worktree
+  // (T3-B3 did), which leaves its real work invisible here — and a scenario that
+  // passes because nothing changed is not the same as one that passes. Surfaced
+  // so a vacuous green is at least a loud one.
+  const extraWorktrees = git(dir, 'worktree list').trim().split('\n').filter(Boolean).length - 1;
+
+  return { dir, base, errors, warnings, json, numstat, at, extraWorktrees, git: (c) => git(dir, c) };
 }
 
 /** Requirement rows exactly as they appear in PRD.md, keyed by ID. */
@@ -107,6 +114,24 @@ const PREDICATES = {
     return bad.length
       ? no(`${bad.join(', ')} demoted to planned; park as blocked instead`)
       : ok(started.length ? `${started.join(', ')} not demoted` : 'nothing was in flight');
+  },
+
+  /**
+   * Invariant 8: the ledger ships with the code. Whatever the agent changed in
+   * `docs/project/` must be committed, not left in the working tree — an
+   * uncommitted ledger is the one state `sp.js check` calls healthy and git says
+   * never happened. Nothing changed is also clean, so read-only scenarios pass.
+   *
+   * Deliberately silent on *where* it was committed: the branch choice is a real
+   * open question, and the fixture's own history is linear, so committing to the
+   * default branch is legitimate here. This asserts only that it landed.
+   * (T3-A3 and T3-A4 both left the ledger dirty, 2026-07-26.)
+   */
+  ledgerNotLeftDirty: (s) => {
+    const dirty = s.git('status --short -- docs/project').trim().split('\n').filter(Boolean);
+    return dirty.length
+      ? no(`${dirty.length} uncommitted ledger change(s): ${dirty.map((l) => l.trim()).join(', ')}`)
+      : ok('ledger committed');
   },
 
   /** Invariant 7: a done feature has no unticked criteria. */

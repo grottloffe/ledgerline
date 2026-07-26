@@ -6,6 +6,32 @@ right skill and stays inside the invariants when the user pushes back. That
 needs real agents, so it cannot run in CI — it runs on demand, driven by a
 model.
 
+## Before every run: the staleness trap
+
+**A skill edit does not reach subagents until the plugin is reloaded.** There are
+two independent caches, and they fail in the same direction — silently green.
+
+| Cache | Detected by | Fixed by |
+|---|---|---|
+| the installed snapshot on disk, `~/.claude/plugins/cache/.../<version>/` | `npm test` (tier0 compares it to the repo) | reinstall, or copy the files across |
+| the in-memory registry that serves skill bodies to agents | **only** `run.js canary` | `/reload-plugins`, or a new session |
+
+The second one is the dangerous one. Nothing on disk is wrong, so every file
+comparison passes; the agent simply receives the text the plugin had when it
+loaded. A re-run then grades the *previous* version of the skill you just edited,
+passes, and looks like your fix worked.
+
+```bash
+node tests/tier3/run.js canary   # prints a prompt; dispatch it as a subagent
+```
+
+The canary asks an agent whether a phrase you just added is in the skill text it
+was given, and forbids it from reading any file — reading the file would answer
+the wrong question. **NO means every result gathered since your edit is void.**
+
+This is not hypothetical: it invalidated a full re-run on 2026-07-26, and the
+run looked like a partial success at the time. See `refactor-2026-07-26.md`.
+
 ## The loop
 
 ```bash
