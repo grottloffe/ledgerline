@@ -27,7 +27,7 @@ To upgrade, re-add the marketplace and reinstall:
 ```
 /plugin uninstall superproj@superproj-marketplace
 /plugin marketplace remove superproj-marketplace
-/plugin marketplace add C:\Code\SuperProj
+/plugin marketplace add C:\Code\Ledgerline
 /plugin install ledgerline@ledgerline-marketplace
 /reload-plugins
 ```
