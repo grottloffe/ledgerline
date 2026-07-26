@@ -62,23 +62,28 @@ function resolveBaseline(dir) {
 // ------------------------------------------------------------------- canary
 
 if (cmd === 'canary') {
-  const src = path.join(REPO_ROOT, 'plugins', 'superproj', 'skills', CANARY.file);
-  const present = fs.readFileSync(src, 'utf8').includes(CANARY.phrase);
-  if (!present) {
-    console.log(red(`the canary phrase is not in ${CANARY.file} — update CANARY in scenarios.js first`));
+  const missing = CANARY.filter((c) => {
+    const src = path.join(REPO_ROOT, 'plugins', 'superproj', 'skills', c.skill, 'SKILL.md');
+    try { return !fs.readFileSync(src, 'utf8').includes(c.phrase); } catch { return true; }
+  });
+  if (missing.length) {
+    console.log(red(`not in the current skill text: ${missing.map((c) => `${c.skill} / "${c.phrase}"`).join(', ')}`));
+    console.log(dim('Update CANARY in scenarios.js to phrases your latest edits actually added.'));
     process.exit(2);
   }
   console.log(bold('Staleness canary — run this BEFORE trusting any prepare/grade cycle.\n'));
   console.log(dim('Skill bodies reach subagents from a registry loaded when the plugin loaded.'));
   console.log(dim('Editing SKILL.md on disk does not refresh it, and no file comparison can tell.\n'));
   console.log('─'.repeat(76));
-  console.log(`Invoke the skill \`superproj:${CANARY.skill}\`. Answer one question using ONLY the skill text that the Skill tool loaded into your context: does a sentence containing the words "${CANARY.phrase}" appear in it?
+  console.log(`Invoke each of these skills in turn and answer one question per skill, using ONLY the skill text the Skill tool loads into your context:
 
-Do not open, read, search or inspect any file on disk, and do not look for the skill's source — reading the file defeats the entire purpose of this question, because the file and the loaded text are exactly what is being compared. Answer YES plus that full sentence quoted from the loaded text, or NO.`);
+${CANARY.map((c, i) => `${i + 1}. \`superproj:${c.skill}\` — does a sentence containing "${c.phrase}" appear in it?`).join('\n')}
+
+Do not open, read, search or inspect any file on disk, and do not look for any skill's source — reading the files defeats the entire purpose of these questions, because the files and the loaded text are exactly what is being compared. For each, answer the number, then YES plus that full sentence quoted from the loaded text, or NO.`);
   console.log('─'.repeat(76));
-  console.log(`\n${bold('YES')} + the sentence → the registry is current; results are trustworthy.`);
-  console.log(`${bold('NO')} → the agent is reading pre-edit text. Run ${bold('/reload-plugins')} (or restart the`);
-  console.log('     session) and re-run this canary. Any result gathered before that is void.');
+  console.log(`\n${bold('YES on all')} → the registry is current; results are trustworthy.`);
+  console.log(`${bold('Any NO')} → that skill is being served pre-edit text. Run ${bold('/reload-plugins')} (or`);
+  console.log('     restart the session) and re-run. Any result gathered before that is void.');
   process.exit(0);
 }
 

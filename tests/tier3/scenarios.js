@@ -122,10 +122,11 @@ const SCENARIOS = [
  * `phrase` must be a string that exists in the current skill and did not exist
  * before your edits. Update it whenever you edit that skill.
  */
-const CANARY = {
-  skill: 'using-superproj',
-  file: 'using-superproj/SKILL.md',
-  phrase: 'not merging and not pushing',
-};
+const CANARY = [
+  { skill: 'using-superproj', phrase: 'not merging and not pushing' },
+  { skill: 'roadmap', phrase: 'Whose change is this' },
+  { skill: 'start-feature', phrase: 'Do not settle it by starting' },
+  { skill: 'finish-feature', phrase: 'Finishing with the ledger uncommitted is not finishing' },
+];
 
 module.exports = { SCENARIOS, TEMPLATE, UNIVERSAL, CANARY };
