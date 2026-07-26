@@ -16,13 +16,15 @@ concurrency:
 
 jobs:
   test:
-    # The engine claims to be cross-platform and dependency-free on Node >= 18.
+    # The engine claims to be cross-platform and dependency-free on Node >= 22.
     # This matrix is what makes that claim checkable rather than aspirational.
+    # 20 is kept as a courtesy leg: it is below the supported floor, so a
+    # failure there is information, not a release blocker.
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        node: ['18', '20', '22', '24']
+        node: ['20', '22', '24']
 
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} / node ${{ matrix.node }}

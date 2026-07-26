@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+- **Node 22 is now the supported floor**, raised from 18, which reached end of
+  life in April 2025. This is a *development* requirement: the root
+  `package.json` is the marketplace and test harness (`private: true`, never
+  published to npm), so `engines` describes what you need to work on Ledgerline,
+  not what you need to run it. The engine itself is dependency-free and still
+  executes fine on older runtimes — CI proved 18 green on all three platforms
+  before it was dropped.
+- CI matrix is now Node 20/22/24 across ubuntu/windows/macos. Node 20 is kept
+  as a courtesy leg below the floor: a failure there is information, not a
+  release blocker.
+- The 0.3.0 upgrade instructions pointed at a local path from before the
+  repository was published. They now use the public `grottloffe/ledgerline`
+  marketplace source.
+
 ## 0.3.0 — 2026-07-26
 
 Renamed the project from **SuperProj** to **Ledgerline**. The old name read as a
@@ -27,7 +43,7 @@ To upgrade, re-add the marketplace and reinstall:
 ```
 /plugin uninstall superproj@superproj-marketplace
 /plugin marketplace remove superproj-marketplace
-/plugin marketplace add C:\Code\Ledgerline
+/plugin marketplace add grottloffe/ledgerline
 /plugin install ledgerline@ledgerline-marketplace
 /reload-plugins
 ```
