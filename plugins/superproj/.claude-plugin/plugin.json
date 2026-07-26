@@ -1,7 +1,7 @@
 {
   "name": "superproj",
   "displayName": "SuperProj",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Project-level memory and tracking on top of Superpowers: PRD intake, roadmap, decision log, follow-ups and lessons learned, so a whole application can be built from scratch across many sessions.",
   "author": {
     "name": "Magnus Engqvist"
